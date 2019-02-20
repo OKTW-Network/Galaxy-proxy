@@ -51,8 +51,6 @@ class Main {
 
     @Subscribe
     fun onPing(event: ProxyPingEvent) {
-        event.connection.protocolVersion
-
         val players = runBlocking { redisClient.getPlayers() }
 
         event.ping = event.ping.asBuilder()
