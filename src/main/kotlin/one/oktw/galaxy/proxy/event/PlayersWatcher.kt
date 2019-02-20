@@ -1,0 +1,53 @@
+package one.oktw.galaxy.proxy.event
+
+import com.velocitypowered.api.event.Subscribe
+import com.velocitypowered.api.event.connection.DisconnectEvent
+import com.velocitypowered.api.event.connection.PostLoginEvent
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
+import com.velocitypowered.api.proxy.Player
+import com.velocitypowered.api.proxy.ProxyServer
+import com.velocitypowered.api.proxy.server.ServerPing
+import kotlinx.coroutines.*
+import one.oktw.galaxy.proxy.redis.RedisClient
+import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
+
+class PlayersWatcher(private val proxy: ProxyServer, private val redis: RedisClient) : CoroutineScope {
+    private val job = Job()
+    private var updatePlayer = true
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.IO + job
+
+    init {
+        launch {
+            while (updatePlayer) {
+                delay(TimeUnit.MINUTES.toMillis(3))
+                forceUpdatePlayers()
+            }
+        }
+    }
+
+    @Subscribe
+    fun onPlayerJoin(event: PostLoginEvent) {
+        launch { redis.addPlayer(event.player.toSamplePlayer()) }
+    }
+
+    @Subscribe
+    fun onPlayerDisconnect(event: DisconnectEvent) {
+        launch { redis.delPlayer(event.player.toSamplePlayer()) }
+    }
+
+    @Subscribe
+    fun onShutdown(event: ProxyShutdownEvent) {
+        updatePlayer = false
+        runBlocking { job.cancelAndJoin() }
+    }
+
+    private fun forceUpdatePlayers() {
+        proxy.allPlayers
+            .map(Player::toSamplePlayer)
+            .let { launch { redis.addPlayers(it) } }
+    }
+}
+
+private fun Player.toSamplePlayer() = ServerPing.SamplePlayer(username, uniqueId)

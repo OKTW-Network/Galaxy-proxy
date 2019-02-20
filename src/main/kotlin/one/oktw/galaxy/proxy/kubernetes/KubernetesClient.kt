@@ -10,6 +10,7 @@ import io.kubernetes.client.models.V1PersistentVolumeClaim
 import io.kubernetes.client.models.VersionInfo
 import io.kubernetes.client.util.Config
 import one.oktw.galaxy.proxy.Main.Companion.main
+import one.oktw.galaxy.proxy.kubernetes.Templates.volume
 import one.oktw.galaxy.proxy.kubernetes.util.apiCallbackAdapter
 
 class KubernetesClient {
@@ -29,7 +30,11 @@ class KubernetesClient {
         try {
             getVolume(namespace, name)
         } catch (ex: ApiException) {
-            main.logger.error("Failed to get Volume:", ex)
+            if (ex.code == 404) {
+                createVolume(namespace, volume(name, "test"))
+            } else {
+                main.logger.error("Failed to get Volume:", ex)
+            }
         }
     }
 
