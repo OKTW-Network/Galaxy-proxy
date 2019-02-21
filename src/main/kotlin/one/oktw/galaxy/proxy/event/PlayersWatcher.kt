@@ -3,6 +3,7 @@ package one.oktw.galaxy.proxy.event
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.DisconnectEvent
 import com.velocitypowered.api.event.connection.PostLoginEvent
+import com.velocitypowered.api.event.proxy.ProxyPingEvent
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
@@ -41,6 +42,21 @@ class PlayersWatcher(private val proxy: ProxyServer, private val redis: RedisCli
     fun onShutdown(event: ProxyShutdownEvent) {
         updatePlayer = false
         runBlocking { job.cancelAndJoin() }
+    }
+
+    @Subscribe
+    fun onPing(event: ProxyPingEvent) {
+        runBlocking {
+            val number = async { redis.getPlayerNumber().toInt() }
+            val players = async { redis.getPlayers() }
+
+            event.ping = event.ping.asBuilder()
+                .onlinePlayers(number.await())
+                .maximumPlayers(Int.MIN_VALUE)
+                .samplePlayers(*players.await().toTypedArray())
+                .version(ServerPing.Version(340, "OKTW Galaxy"))
+                .build()
+        }
     }
 
     private fun forceUpdatePlayers() {

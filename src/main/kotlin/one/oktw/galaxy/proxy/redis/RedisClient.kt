@@ -2,11 +2,13 @@ package one.oktw.galaxy.proxy.redis
 
 import com.velocitypowered.api.proxy.server.ServerPing
 import io.lettuce.core.RedisClient
+import io.lettuce.core.ScanArgs
 import kotlinx.coroutines.future.await
 import java.util.*
 
 class RedisClient {
     companion object {
+        private const val DB_PLAYERS = 0
         private const val KEY_PLAYERS = "players"
     }
 
@@ -26,26 +28,40 @@ class RedisClient {
     suspend fun addPlayer(player: ServerPing.SamplePlayer, ttl: Long = 300) {
         client.async()
             .apply {
-                set("$KEY_PLAYERS:${player.name}", player.id.toString()).await()
+                select(DB_PLAYERS)
+                set(player.name, player.id.toString()).await()
                 expire("$KEY_PLAYERS:${player.name}", ttl).await()
             }
     }
 
     suspend fun delPlayer(player: ServerPing.SamplePlayer) {
         client.async()
-            .del("$KEY_PLAYERS:${player.name}")
+            .apply { select(DB_PLAYERS) }
+            .del(player.name)
             .await()
     }
 
-    suspend fun getPlayers() = client.async()
-        .keys("$KEY_PLAYERS:*")
+    suspend fun getPlayerNumber(): Long = client.async()
+        .apply { select(DB_PLAYERS) }
+        .dbsize()
         .await()
-        .run {
-            if (isEmpty()) return@run emptyList<ServerPing.SamplePlayer>()
 
-            client.async()
-                .mget(*toTypedArray())
+
+    suspend fun getPlayers(limit: Long = 12) = client.async()
+        .run {
+            select(DB_PLAYERS)
+
+            scan(ScanArgs().limit(limit))
                 .await()
-                .map { ServerPing.SamplePlayer(it.key.drop(KEY_PLAYERS.length + 1), UUID.fromString(it.value)) }
+                .keys
+                .run {
+                    if (isEmpty()) {
+                        emptyList()
+                    } else {
+                        mget(*toTypedArray())
+                            .await()
+                            .map { ServerPing.SamplePlayer(it.key, UUID.fromString(it.value)) }
+                    }
+                }
         }
 }
