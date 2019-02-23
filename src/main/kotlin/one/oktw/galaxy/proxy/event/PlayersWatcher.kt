@@ -9,6 +9,7 @@ import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerPing
 import kotlinx.coroutines.*
+import one.oktw.galaxy.proxy.extension.toSamplePlayer
 import one.oktw.galaxy.proxy.redis.RedisClient
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
@@ -65,5 +66,3 @@ class PlayersWatcher(private val proxy: ProxyServer, private val redis: RedisCli
             .let { launch { redis.addPlayers(it) } }
     }
 }
-
-private fun Player.toSamplePlayer() = ServerPing.SamplePlayer(username, uniqueId)
