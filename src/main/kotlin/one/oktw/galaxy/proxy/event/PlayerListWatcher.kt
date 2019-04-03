@@ -12,12 +12,11 @@ import kotlinx.coroutines.*
 import one.oktw.galaxy.proxy.extension.toSamplePlayer
 import one.oktw.galaxy.proxy.redis.RedisClient
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.CoroutineContext
 
-class PlayersWatcher(private val proxy: ProxyServer, private val redis: RedisClient) : CoroutineScope {
+class PlayerListWatcher(private val proxy: ProxyServer, private val redis: RedisClient) : CoroutineScope {
     private val job = Job()
     private var updatePlayer = true
-    override val coroutineContext: CoroutineContext
+    override val coroutineContext
         get() = Dispatchers.IO + job
 
     init {

@@ -4,12 +4,13 @@ import com.velocitypowered.api.proxy.server.ServerPing
 import io.lettuce.core.RedisClient
 import io.lettuce.core.ScanArgs
 import kotlinx.coroutines.future.await
+import one.oktw.galaxy.proxy.model.Galaxy
 import java.util.*
 
 class RedisClient {
     companion object {
         private const val DB_PLAYERS = 0
-        private const val KEY_PLAYERS = "players"
+        private const val DB_GALAXY = 1
     }
 
     // TODO move connect string to config
@@ -21,6 +22,7 @@ class RedisClient {
         .split("\r\n")
         .first { it.startsWith("redis_version") }
 
+    // Player
     suspend fun addPlayers(players: List<ServerPing.SamplePlayer>, ttl: Long = 300) {
         players.forEach { addPlayer(it, ttl) }
     }
@@ -30,7 +32,7 @@ class RedisClient {
             .apply {
                 select(DB_PLAYERS)
                 set(player.name, player.id.toString()).await()
-                expire("$KEY_PLAYERS:${player.name}", ttl).await()
+                expire(player.name, ttl).await()
             }
     }
 
@@ -45,7 +47,6 @@ class RedisClient {
         .apply { select(DB_PLAYERS) }
         .dbsize()
         .await()
-
 
     suspend fun getPlayers(limit: Long = 12) = client.async()
         .run {
@@ -64,4 +65,26 @@ class RedisClient {
                     }
                 }
         }
+
+    // Galaxy
+    suspend fun addGalaxy(galaxy: Galaxy) {
+        client.async()
+            .run {
+                select(DB_GALAXY)
+            }
+    }
+
+    suspend fun getGalaxies(): List<UUID> = client.async()
+        .run {
+            select(DB_GALAXY)
+            keys("*").await()
+                .map { UUID.fromString(it) }
+        }
+
+    suspend fun getGalaxyPlayers(galaxy: Galaxy) {
+        client.async()
+            .run {
+                select(DB_GALAXY)
+            }
+    }
 }

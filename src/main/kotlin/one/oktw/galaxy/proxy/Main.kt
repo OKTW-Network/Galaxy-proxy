@@ -6,7 +6,7 @@ import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.proxy.ProxyServer
 import kotlinx.coroutines.runBlocking
-import one.oktw.galaxy.proxy.event.PlayersWatcher
+import one.oktw.galaxy.proxy.event.PlayerListWatcher
 import one.oktw.galaxy.proxy.kubernetes.KubernetesClient
 import one.oktw.galaxy.proxy.redis.RedisClient
 import org.slf4j.Logger
@@ -20,7 +20,7 @@ class Main {
 
     private val kubernetesClient = KubernetesClient()
     private val redisClient = RedisClient()
-    private lateinit var playersWatcher: PlayersWatcher
+    private lateinit var playerListWatcher: PlayerListWatcher
     lateinit var proxy: ProxyServer
     lateinit var logger: Logger
 
@@ -40,8 +40,8 @@ class Main {
 
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
-        playersWatcher = PlayersWatcher(proxy, redisClient)
+        playerListWatcher = PlayerListWatcher(proxy, redisClient)
 
-        proxy.eventManager.register(this, playersWatcher)
+        proxy.eventManager.register(this, playerListWatcher)
     }
 }
