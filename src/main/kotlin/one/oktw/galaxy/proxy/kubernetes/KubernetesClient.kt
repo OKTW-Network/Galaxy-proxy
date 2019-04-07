@@ -1,50 +1,36 @@
 package one.oktw.galaxy.proxy.kubernetes
 
-import io.kubernetes.client.ApiException
-import io.kubernetes.client.Configuration
-import io.kubernetes.client.apis.AppsV1Api
-import io.kubernetes.client.apis.CoreV1Api
-import io.kubernetes.client.apis.VersionApi
-import io.kubernetes.client.models.V1Deployment
-import io.kubernetes.client.models.V1PersistentVolumeClaim
-import io.kubernetes.client.models.VersionInfo
-import io.kubernetes.client.util.Config
-import one.oktw.galaxy.proxy.Main.Companion.main
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim
+import io.fabric8.kubernetes.api.model.Pod
+import io.fabric8.kubernetes.client.DefaultKubernetesClient
+import io.fabric8.kubernetes.client.VersionInfo
+import io.fabric8.kubernetes.client.internal.readiness.ReadinessWatcher
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.withContext
+import one.oktw.galaxy.proxy.kubernetes.Templates.galaxy
 import one.oktw.galaxy.proxy.kubernetes.Templates.volume
-import one.oktw.galaxy.proxy.kubernetes.util.apiCallbackAdapter
+import java.util.concurrent.TimeUnit
 
 class KubernetesClient {
-    private val client = Config.defaultClient().also(Configuration::setDefaultApiClient)
+    private val client = DefaultKubernetesClient()
 
-    suspend fun info() = apiCallbackAdapter<VersionInfo> { VersionApi().getCodeAsync(it) }
+    suspend fun info(): VersionInfo = withContext(IO) { client.version }
 
-    suspend fun createDeployment(namespace: String, deployment: V1Deployment) = apiCallbackAdapter<V1Deployment> {
-        AppsV1Api().createNamespacedDeploymentAsync(namespace, deployment, null, null, null, it)
+    suspend fun createGalaxy(name: String, pvc: PersistentVolumeClaim): Pod = withContext(IO) {
+        client.pods().create(galaxy(name, pvc.metadata.name))
+            .let { ReadinessWatcher(it).apply { client.pods().withName(it.metadata.name).watch(this) } }
+            .await(10, TimeUnit.MINUTES)
     }
 
-    suspend fun getDeployment(namespace: String, name: String) = apiCallbackAdapter<V1Deployment> {
-        AppsV1Api().readNamespacedDeploymentAsync(namespace, name, null, null, null, it)
+    suspend fun getOrCreateVolume(name: String, storageClass: String, size: String = "1Gi"): PersistentVolumeClaim {
+        return getVolume(name) ?: createVolume(volume(name, storageClass, size))
     }
 
-    suspend fun getOrCreateVolume(namespace: String, name: String) {
-        try {
-            getVolume(namespace, name)
-        } catch (ex: ApiException) {
-            if (ex.code == 404) {
-                createVolume(namespace, volume(name, "test"))
-            } else {
-                main.logger.error("Failed to get Volume:", ex)
-            }
-        }
+    suspend fun createVolume(volume: PersistentVolumeClaim): PersistentVolumeClaim = withContext(IO) {
+        client.persistentVolumeClaims().create(volume)
     }
 
-    suspend fun createVolume(namespace: String, volume: V1PersistentVolumeClaim): V1PersistentVolumeClaim {
-        return apiCallbackAdapter {
-            CoreV1Api().createNamespacedPersistentVolumeClaimAsync(namespace, volume, null, null, null, it)
-        }
-    }
-
-    suspend fun getVolume(namespace: String, name: String) = apiCallbackAdapter<V1PersistentVolumeClaim> {
-        CoreV1Api().readNamespacedPersistentVolumeClaimAsync(name, namespace, null, null, null, it)
+    suspend fun getVolume(name: String): PersistentVolumeClaim? = withContext(IO) {
+        client.persistentVolumeClaims().withName(name).get()
     }
 }

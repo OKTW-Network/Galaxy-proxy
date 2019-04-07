@@ -26,7 +26,8 @@ dependencies {
     kapt 'com.velocitypowered:velocity-api:1.0-SNAPSHOT'
     implementation project(':api')
     implementation 'com.velocitypowered:velocity-api:1.0-SNAPSHOT'
-    implementation 'io.kubernetes:client-java:4.0.0'
+    implementation 'io.fabric8:kubernetes-client:4.2.2'
+    implementation 'com.fkorotkov:kubernetes-dsl:2.0.1'
     implementation 'io.lettuce:lettuce-core:5.1.4.RELEASE'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$Coroutines_version"
@@ -47,18 +48,24 @@ tasks.withType(AbstractArchiveTask) {
 shadowJar {
     zip64 true
     classifier = null
-    exclude "META-INF/**"
-    exclude "**/*.kotlin_metadata"
+//    exclude "META-INF/**"
+//    exclude "**/*.kotlin_metadata"
+//    include "META-INF/services/*"
 
     // exclude velocity dependencies
     dependencies {
         include dependency(":api")
         include dependency("org.mongodb:")
-        include dependency("io.kubernetes:")
+        include dependency("io.fabric8:")
         include dependency("org.jetbrains.kotlin:")
         include dependency("org.jetbrains.kotlinx:")
         include dependency("org.apache.commons:")
-        include dependency("com.squareup.okhttp:")
+        include dependency("org.yaml:")
+        include dependency("com.fasterxml.jackson.core:")
+        include dependency("com.fasterxml.jackson.module:")
+        include dependency("com.fasterxml.jackson.dataformat:")
+        include dependency("com.fkorotkov:")
+        include dependency("com.squareup.okhttp3:")
         include dependency("com.squareup.okio:")
         include dependency("joda-time:")
         include dependency("io.lettuce:")
@@ -67,21 +74,24 @@ shadowJar {
         include dependency("org.reactivestreams:")
     }
 
-    relocate "kotlin", "one.oktw.relocate.kotlin"
-    relocate "kotlinx", "one.oktw.relocate.kotlinx"
-    relocate "org.bson", "one.oktw.relocate.bson"
-    relocate "org.jetbrains", "one.oktw.relocate.org.jetbrains"
-    relocate "org.joda", "one.oktw.relocate.org.joda"
-    relocate "org.apache", "one.oktw.relocate.org.apache"
-    relocate "org.reactivestreams", "one.oktw.relocate.org.reactivestreams"
-    relocate "io.kubernetes", "one.oktw.relocate.io.kubernetes"
-    relocate "io.lettuce", "one.oktw.relocate.io.lettuce"
-    relocate "io.netty", "one.oktw.relocate.io.netty"
-    relocate "com.squareup", "one.oktw.relocate.com.squareup"
-    relocate "okio", "one.oktw.relocate.okio"
-    relocate "reactor", "one.oktw.relocate.reactor"
+//    relocate "kotlin", "one.oktw.relocate.kotlin"
+//    relocate "kotlinx", "one.oktw.relocate.kotlinx"
+//    relocate "org.bson", "one.oktw.relocate.bson"
+//    relocate "org.jetbrains", "one.oktw.relocate.org.jetbrains"
+//    relocate "org.joda", "one.oktw.relocate.org.joda"
+//    relocate "org.apache", "one.oktw.relocate.org.apache"
+//    relocate "org.reactivestreams", "one.oktw.relocate.org.reactivestreams"
+//    relocate "io.fabric8", "one.oktw.relocate.io.fabric8"
+//    relocate "io.lettuce", "one.oktw.relocate.io.lettuce"
+//    relocate "io.netty", "one.oktw.relocate.io.netty"
+//    relocate "com.fasterxml", "one.oktw.relocate.com.fasterxml"
+//    relocate "com.fkorotkov", "one.oktw.relocate.com.fkorotkov"
+//    relocate "com.squareup", "one.oktw.relocate.com.squareup"
+//    relocate "okhttp3", "one.oktw.relocate.okhttp3"
+//    relocate "okio", "one.oktw.relocate.okio"
+//    relocate "reactor", "one.oktw.relocate.reactor"
 
-    minimize()
+//    minimize()
 }
 
 jar.enabled = false
