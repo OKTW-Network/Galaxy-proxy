@@ -4,9 +4,12 @@ import com.rabbitmq.client.*
 import one.oktw.galaxy.proxy.Main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.event.MessageDeliveryEvent
+import one.oktw.galaxy.proxy.pubsub.data.MessageWrapper
+import java.util.*
+import kotlin.collections.HashMap
 
 @Suppress("MemberVisibilityCanBePrivate")
-class Manager(private val channel: Channel, val exchange: String) {
+class Manager(private val channel: Channel, exchange: String) {
     companion object {
         class ConsumerWrapper(val topic: String, val manager: Manager) : Consumer {
             override fun handleRecoverOk(consumerTag: String?) {
@@ -31,7 +34,7 @@ class Manager(private val channel: Channel, val exchange: String) {
                 properties: AMQP.BasicProperties,
                 body: ByteArray
             ) {
-                manager.handleDelivery(topic, consumerTag, envelope, properties, body)
+                manager.handleDelivery(topic, body)
                 manager.channel.basicAck(envelope.deliveryTag, false)
             }
 
@@ -43,7 +46,7 @@ class Manager(private val channel: Channel, val exchange: String) {
 
     private val tags: HashMap<String, String> = HashMap()
     private val mqOpts: HashMap<String, Any> = HashMap<String, Any>().apply { this["x-message-ttl"] = 0 }
-
+    private val instanceId = UUID.randomUUID()
 
     init {
         channel.exchangeDeclare(exchange, "fanout")
@@ -63,25 +66,31 @@ class Manager(private val channel: Channel, val exchange: String) {
 
     fun handleDelivery(
         topic: String,
-        consumerTag: String,
-        envelope: Envelope,
-        properties: AMQP.BasicProperties,
         body: ByteArray
     ) {
-        val message = MessageDeliveryEvent(
-            topic,
-            consumerTag,
-            envelope,
-            properties,
-            body
-        )
+        val unwrappedData = try { ProxyAPI.decode<Any>(body) } catch (err: Throwable) { null } as? MessageWrapper ?: return
 
-        Main.main.proxy.eventManager.fireAndForget(message)
+        // drop short circuited message
+        if (unwrappedData.source == instanceId) return
+
+        MessageDeliveryEvent(
+            topic,
+            unwrappedData.message
+        ).let {
+            Main.main.proxy.eventManager.fireAndForget(it)
+        }
+
     }
 
     fun send(topic: String, item: Any) {
-        val encoded = ProxyAPI.encode(item)
-        send(topic, encoded)
+        MessageDeliveryEvent(
+            topic,
+            item
+        ).let {
+            Main.main.proxy.eventManager.fireAndForget(it)
+        }
+
+        send(topic, ProxyAPI.encode(MessageWrapper(instanceId, item)))
     }
 
     fun send(topic: String, body: ByteArray) {

@@ -1,18 +1,11 @@
 package one.oktw.galaxy.proxy.event
 
 import com.velocitypowered.api.event.Subscribe
-import net.kyori.text.TextComponent
 import one.oktw.galaxy.proxy.Main
+import one.oktw.galaxy.proxy.model.ChatData
 import java.util.*
 
 class ChatExchange(val topic: String) {
-    companion object {
-        data class ChatData (
-            val server: UUID,
-            val player: UUID,
-            val message: TextComponent
-        )
-    }
 
     @Subscribe
     fun onRelay (event: MessageDeliveryEvent) {
@@ -31,4 +24,5 @@ class ChatExchange(val topic: String) {
             }
         }
     }
+
 }
