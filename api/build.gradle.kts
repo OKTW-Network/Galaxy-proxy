@@ -34,6 +34,11 @@ val shadowJar by tasks.getting(ShadowJar::class) {
     minimize()
 }
 
+val sourcesJar by tasks.register<Jar>("sourcesJar") {
+    archiveClassifier.set("sources")
+    from(sourceSets.main.get().allSource)
+}
+
 tasks.getByName<Jar>("jar") {
     dependsOn(shadowJar)
 }
@@ -42,6 +47,7 @@ publishing {
     publications {
         create<MavenPublication>("api") {
             from(components["java"])
+            artifact(sourcesJar)
             artifact(shadowJar)
         }
     }
