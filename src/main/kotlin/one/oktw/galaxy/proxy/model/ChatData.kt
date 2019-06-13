@@ -5,6 +5,5 @@ import java.util.*
 
 data class ChatData (
     val server: UUID,
-    val player: UUID,
     val message: TextComponent
 )
