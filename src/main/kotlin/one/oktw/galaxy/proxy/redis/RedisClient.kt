@@ -7,14 +7,13 @@ import kotlinx.coroutines.future.await
 import one.oktw.galaxy.proxy.model.Galaxy
 import java.util.*
 
-class RedisClient {
+class RedisClient(url: String) {
     companion object {
         private const val DB_PLAYERS = 0
         private const val DB_GALAXY = 1
     }
 
-    // TODO move connect string to config
-    private val client = RedisClient.create("redis-sentinel://redis-ha#mymaster").connect()
+    private val client = RedisClient.create(url).connect()
 
     suspend fun version() = client.async()
         .info("server")

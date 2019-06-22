@@ -11,8 +11,8 @@ import one.oktw.galaxy.proxy.kubernetes.Templates.galaxy
 import one.oktw.galaxy.proxy.kubernetes.Templates.volume
 import java.util.concurrent.TimeUnit
 
-class KubernetesClient {
-    private val client = DefaultKubernetesClient()
+class KubernetesClient(apiUrl: String? = null) {
+    private val client = DefaultKubernetesClient() // TODO configurable api URL
 
     suspend fun info(): VersionInfo = withContext(IO) { client.version }
 

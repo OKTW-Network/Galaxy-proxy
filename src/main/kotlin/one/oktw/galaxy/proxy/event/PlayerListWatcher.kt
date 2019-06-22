@@ -13,7 +13,11 @@ import one.oktw.galaxy.proxy.extension.toSamplePlayer
 import one.oktw.galaxy.proxy.redis.RedisClient
 import java.util.concurrent.TimeUnit
 
-class PlayerListWatcher(private val proxy: ProxyServer, private val redis: RedisClient) : CoroutineScope {
+class PlayerListWatcher(
+    private val proxy: ProxyServer,
+    private val redis: RedisClient,
+    private val protocolVersion: Int
+) : CoroutineScope {
     private val job = Job()
     private var updatePlayer = true
     override val coroutineContext
@@ -54,7 +58,7 @@ class PlayerListWatcher(private val proxy: ProxyServer, private val redis: Redis
                 .onlinePlayers(number.await())
                 .maximumPlayers(Int.MIN_VALUE)
                 .samplePlayers(*players.await().toTypedArray())
-                .version(ServerPing.Version(340, "OKTW Galaxy"))
+                .version(ServerPing.Version(protocolVersion, "OKTW Galaxy"))
                 .build()
         }
     }
