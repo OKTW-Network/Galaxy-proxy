@@ -11,15 +11,21 @@ import one.oktw.galaxy.proxy.kubernetes.Templates.galaxy
 import one.oktw.galaxy.proxy.kubernetes.Templates.volume
 import java.util.concurrent.TimeUnit
 
-class KubernetesClient(apiUrl: String? = null) {
+class KubernetesClient {
     private val client = DefaultKubernetesClient() // TODO configurable api URL
 
     suspend fun info(): VersionInfo = withContext(IO) { client.version }
 
+    suspend fun getOrCreateGalaxyAndVolume(name: String, storageClass: String, size: String = "1Gi"): Pod {
+        return getGalaxy(name) ?: createGalaxy(name, getOrCreateVolume(name, storageClass, size))
+    }
+
+    suspend fun getGalaxy(name: String): Pod? = withContext(IO) {
+        client.pods().withName(name).get()
+    }
+
     suspend fun createGalaxy(name: String, pvc: PersistentVolumeClaim): Pod = withContext(IO) {
         client.pods().create(galaxy(name, pvc.metadata.name))
-            .let { ReadinessWatcher(it).apply { client.pods().withName(it.metadata.name).watch(this) } }
-            .await(10, TimeUnit.MINUTES)
     }
 
     suspend fun getOrCreateVolume(name: String, storageClass: String, size: String = "1Gi"): PersistentVolumeClaim {
@@ -32,5 +38,12 @@ class KubernetesClient(apiUrl: String? = null) {
 
     suspend fun getVolume(name: String): PersistentVolumeClaim? = withContext(IO) {
         client.persistentVolumeClaims().withName(name).get()
+    }
+
+    suspend fun waitReady(pod: Pod) {
+        withContext(IO) {
+            ReadinessWatcher(pod).also { client.pods().withName(pod.metadata.name).watch(it) }
+                .await(10, TimeUnit.MINUTES)
+        }
     }
 }

@@ -4,16 +4,18 @@ import com.velocitypowered.api.proxy.server.ServerPing
 import io.lettuce.core.RedisClient
 import io.lettuce.core.ScanArgs
 import kotlinx.coroutines.future.await
+import one.oktw.galaxy.proxy.Main.Companion.main
+import one.oktw.galaxy.proxy.config.CoreSpec
 import one.oktw.galaxy.proxy.model.Galaxy
 import java.util.*
 
-class RedisClient(url: String) {
+class RedisClient {
     companion object {
         private const val DB_PLAYERS = 0
         private const val DB_GALAXY = 1
     }
 
-    private val client = RedisClient.create(url).connect()
+    private val client = RedisClient.create(main.config[CoreSpec.redis]).connect()
 
     suspend fun version() = client.async()
         .info("server")

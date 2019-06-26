@@ -23,22 +23,20 @@ class Main {
             private set
     }
 
-    private lateinit var kubernetesClient: KubernetesClient
-    private lateinit var redisClient: RedisClient
+    val config: Config
+
     private lateinit var playerListWatcher: PlayerListWatcher
-    lateinit var config: Config
+
+    lateinit var kubernetesClient: KubernetesClient
+        private set
+    lateinit var redisClient: RedisClient
         private set
     lateinit var proxy: ProxyServer
         private set
     lateinit var logger: Logger
         private set
 
-    @Inject
-    fun init(proxy: ProxyServer, logger: Logger) {
-        main = this
-        this.proxy = proxy
-        this.logger = logger
-
+    init {
         Files.createDirectories(Paths.get("config"))
         if (!Files.exists(Paths.get("config", "galaxy-proxy.toml"))) {
             this::class.java.getResourceAsStream("/config/galaxy-proxy.toml")
@@ -49,9 +47,16 @@ class Main {
             .from.toml.url(this::class.java.getResource("/config/galaxy-proxy.toml"))
             .from.toml.file("config/galaxy-proxy.toml")
             .from.env()
+    }
 
-        this.kubernetesClient = KubernetesClient(config[CoreSpec.kubernetes])
-        this.redisClient = RedisClient(config[CoreSpec.redis])
+    @Inject
+    fun init(proxy: ProxyServer, logger: Logger) {
+        main = this
+        this.proxy = proxy
+        this.logger = logger
+
+        this.kubernetesClient = KubernetesClient()
+        this.redisClient = RedisClient()
 
         runBlocking {
             logger.info("Kubernetes Version: ${kubernetesClient.info().gitVersion}")
@@ -63,7 +68,7 @@ class Main {
 
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
-        playerListWatcher = PlayerListWatcher(proxy, redisClient, config[CoreSpec.protocolVersion])
+        playerListWatcher = PlayerListWatcher(config[CoreSpec.protocolVersion])
 
         proxy.eventManager.register(this, playerListWatcher)
     }
