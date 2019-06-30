@@ -35,6 +35,10 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default) {
 
         launch {
             when (val data = ProxyAPI.decode<Packet>(event.data)) {
+                is WhoAmI -> {
+                    ProxyAPI.encode(WhoAmI.Result(UUID.fromString(source.server.serverInfo.name)))
+                        .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
+                }
                 is CreateGalaxy -> {
                     val kubernetes = main.kubernetesClient
                     val id = data.uuid.toString()
