@@ -52,6 +52,8 @@ class Main {
             logger.info("Redis version: ${redisClient.version()}")
         }
 
+        proxy.channelRegistrar.register(ChatExchange.eventId)
+        proxy.channelRegistrar.register(ChatExchange.eventIdResponse)
         logger.info("Galaxy Init!")
     }
 

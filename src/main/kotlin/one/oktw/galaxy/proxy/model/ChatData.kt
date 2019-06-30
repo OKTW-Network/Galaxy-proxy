@@ -1,9 +1,10 @@
 package one.oktw.galaxy.proxy.model
 
-import net.kyori.text.TextComponent
+import one.oktw.galaxy.proxy.api.packet.MessageSend
 import java.util.*
 
 data class ChatData (
     val server: UUID,
-    val message: TextComponent
+    // relay chat event packet
+    val packet: MessageSend
 )
