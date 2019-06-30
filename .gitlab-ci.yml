@@ -1,0 +1,40 @@
+image: docker:stable
+
+services:
+  - docker:dind
+
+variables:
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+
+before_script:
+  - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+
+build-master:
+  stage: build
+  script:
+    - docker pull "$CI_REGISTRY_IMAGE" || true
+    - docker build --pull --cache-from "$CI_REGISTRY_IMAGE" -t "$CI_REGISTRY_IMAGE" .
+    - docker push "$CI_REGISTRY_IMAGE"
+  only:
+    - master
+
+build-tags:
+  stage: build
+  script:
+    - docker pull "$CI_REGISTRY_IMAGE" || true
+    - docker build --pull --cache-from "$CI_REGISTRY_IMAGE" -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG" .
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
+  only:
+    - tags
+
+build-ref:
+  stage: build
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build --pull --cache-from "$CI_REGISTRY_IMAGE" -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" .
+    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+  only:
+    - branches
+  except:
+    - master
