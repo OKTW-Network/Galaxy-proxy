@@ -84,8 +84,8 @@ object Templates {
                         exec { command = asList("control", "ping") }
                     }
                     volumeMounts = mounts
+                    env = asList(EnvVar("FABRIC_PROXY_SECRET", forwardSecret, null))
                     resources {
-                        //TODO config
                         requests = mapOf(
                             Pair("cpu", Quantity(config[GalaxySpec.Resource.cpuRequire])),
                             Pair("memory", Quantity(config[GalaxySpec.Resource.memoryRequire]))
