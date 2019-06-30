@@ -3,6 +3,7 @@ package one.oktw.galaxy.proxy.event
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.PluginMessageEvent
 import com.velocitypowered.api.proxy.ServerConnection
+import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier
 import net.kyori.text.TextComponent
 import net.kyori.text.serializer.ComponentSerializers
 import one.oktw.galaxy.proxy.Main
