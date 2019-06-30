@@ -11,7 +11,7 @@ import one.oktw.galaxy.proxy.model.ChatData
 import java.util.*
 
 class ChatExchange(val topic: String) {
-    val eventId = "galaxy/chat"
+    val eventId = MinecraftChannelIdentifier.create("galaxy", "proxy/chat")
 
     @Subscribe
     fun onServerSend(event: PluginMessageEvent) {
