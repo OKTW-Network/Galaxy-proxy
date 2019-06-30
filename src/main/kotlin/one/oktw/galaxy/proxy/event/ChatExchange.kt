@@ -15,7 +15,7 @@ class ChatExchange(val topic: String) {
 
     @Subscribe
     fun onServerSend(event: PluginMessageEvent) {
-        if (event.identifier.id != eventId) return
+        if (!event.identifier.equals(eventId)) return
         val source = event.source as? ServerConnection ?: return
         val textComponentString = ProxyAPI.decode<String>(event.data)
         val textComponent = ComponentSerializers.JSON.deserialize(textComponentString) as? TextComponent ?: return
