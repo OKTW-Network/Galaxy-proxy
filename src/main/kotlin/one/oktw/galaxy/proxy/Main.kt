@@ -3,16 +3,24 @@ package one.oktw.galaxy.proxy
 import com.google.inject.Inject
 import com.uchuhimo.konf.Config
 import com.velocitypowered.api.event.Subscribe
+import com.velocitypowered.api.event.player.ServerPreConnectEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.proxy.ProxyServer
+import com.velocitypowered.api.proxy.server.RegisteredServer
+import com.velocitypowered.api.proxy.server.ServerInfo
+import io.fabric8.kubernetes.client.internal.readiness.Readiness
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import one.oktw.galaxy.proxy.config.CoreSpec
 import one.oktw.galaxy.proxy.config.GalaxySpec
+import one.oktw.galaxy.proxy.config.GalaxySpec.Storage.storageClass
 import one.oktw.galaxy.proxy.event.PlayerListWatcher
 import one.oktw.galaxy.proxy.kubernetes.KubernetesClient
 import one.oktw.galaxy.proxy.redis.RedisClient
 import org.slf4j.Logger
+import java.net.InetSocketAddress
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -26,6 +34,7 @@ class Main {
     val config: Config
 
     private lateinit var playerListWatcher: PlayerListWatcher
+    private lateinit var lobby: RegisteredServer
 
     lateinit var kubernetesClient: KubernetesClient
         private set
@@ -71,5 +80,19 @@ class Main {
         playerListWatcher = PlayerListWatcher(config[CoreSpec.protocolVersion])
 
         proxy.eventManager.register(this, playerListWatcher)
+
+        // Start lobby TODO auto scale lobby
+        GlobalScope.launch {
+            lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config[storageClass], "10Gi")
+                .also { if (!Readiness.isReady(it)) kubernetesClient.waitReady(it) }
+                .let { proxy.registerServer(ServerInfo("galaxy-lobby", InetSocketAddress(it.status.podIP, 25565))) }
+        }
+
+        // Connect player to lobby
+        proxy.eventManager.register(this, ServerPreConnectEvent::class.java) {
+            if (it.player.currentServer.isPresent || !this::lobby.isInitialized) return@register // Ignore exist player
+
+            it.result = ServerPreConnectEvent.ServerResult.allowed(lobby)
+        }
     }
 }
