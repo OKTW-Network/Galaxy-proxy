@@ -11,7 +11,6 @@ import org.bson.codecs.pojo.PojoCodecProvider
 import org.bson.io.BasicOutputBuffer
 import java.nio.ByteBuffer
 import java.util.*
-import java.util.Arrays.asList
 
 object ProxyAPI {
     private val DEFAULT_ENCODER_CONTEXT = EncoderContext.builder().build()
@@ -25,7 +24,7 @@ object ProxyAPI {
         MapCodecProvider(),
         Jsr310CodecProvider(),
         PojoCodecProvider.builder()
-            .conventions(asList(SET_PRIVATE_FIELDS_CONVENTION, ANNOTATION_CONVENTION, CLASS_AND_PROPERTY_CONVENTION))
+            .conventions(listOf(SET_PRIVATE_FIELDS_CONVENTION, ANNOTATION_CONVENTION, CLASS_AND_PROPERTY_CONVENTION))
             .automatic(true)
             .build()
     )
