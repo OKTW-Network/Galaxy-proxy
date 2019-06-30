@@ -50,7 +50,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default) {
                             ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Starting))
                                 .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
 
-                            kubernetes.waitReady(galaxy)
+                            galaxy = kubernetes.waitReady(galaxy)
 
                             // Send packet to server: Galaxy is starting
                             ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Started))
@@ -70,7 +70,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default) {
                         ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Starting))
                             .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
 
-                        kubernetes.waitReady(galaxy)
+                        galaxy = kubernetes.waitReady(galaxy)
 
                         // Send packet to server: Galaxy is starting
                         ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Started))

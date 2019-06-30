@@ -84,7 +84,7 @@ class Main {
         // Start lobby TODO auto scale lobby
         GlobalScope.launch {
             lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config[storageClass], "10Gi")
-                .also { if (!Readiness.isReady(it)) kubernetesClient.waitReady(it) }
+                .let { if (!Readiness.isReady(it)) kubernetesClient.waitReady(it) else it }
                 .let { proxy.registerServer(ServerInfo("galaxy-lobby", InetSocketAddress(it.status.podIP, 25565))) }
         }
 
