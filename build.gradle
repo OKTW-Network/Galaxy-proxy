@@ -65,6 +65,7 @@ shadowJar {
         include dependency("com.squareup.okhttp3:")
         include dependency("com.squareup.okio:")
         include dependency("com.uchuhimo:")
+        include dependency("javax.validation:")
         include dependency("joda-time:")
         include dependency("io.lettuce:")
         include dependency("io.projectreactor:")
