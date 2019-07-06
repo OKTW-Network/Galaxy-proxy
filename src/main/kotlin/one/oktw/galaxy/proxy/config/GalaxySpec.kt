@@ -15,6 +15,6 @@ object GalaxySpec : ConfigSpec() {
 
     object Storage : ConfigSpec() {
         val storageClass by required<String>(description = "Kubernetes storage class")
-        val size by required<String>("Volume size")
+        val size by required<String>(description = "Volume size")
     }
 }
