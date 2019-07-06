@@ -81,7 +81,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default) {
                     main.proxy.run {
                         getServer(id)
                             .orElseGet { registerServer(ServerInfo(id, InetSocketAddress(galaxy.status.podIP, 25565))) }
-                            .let(player::createConnectionRequest)
+                            .let(player::createConnectionRequest).fireAndForget()
                     }
                 }
             }
