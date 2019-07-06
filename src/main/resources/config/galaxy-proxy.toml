@@ -14,7 +14,7 @@ image = "registry.gitlab.com/oktw-network/docker-galaxy:fabric"
 # Kubernetes image pull secret
 pullSecret = "gitlab"
 
-    [resource]
+    [galaxy.resource]
     # Container CPU require
     cpuRequire = "300Mi"
 
@@ -27,7 +27,7 @@ pullSecret = "gitlab"
     # Container memory limit
     memoryLimit = "2Gi"
 
-    [storage]
+    [galaxy.storage]
     # Kubernetes storage class
     storageClass = ""
 
