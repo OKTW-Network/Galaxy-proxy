@@ -16,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 import one.oktw.galaxy.proxy.config.CoreSpec
 import one.oktw.galaxy.proxy.config.GalaxySpec
 import one.oktw.galaxy.proxy.config.GalaxySpec.Storage.storageClass
+import one.oktw.galaxy.proxy.event.GalaxyPacket
 import one.oktw.galaxy.proxy.event.PlayerListWatcher
 import one.oktw.galaxy.proxy.kubernetes.KubernetesClient
 import one.oktw.galaxy.proxy.redis.RedisClient
@@ -33,7 +34,6 @@ class Main {
 
     val config: Config
 
-    private lateinit var playerListWatcher: PlayerListWatcher
     private lateinit var lobby: RegisteredServer
 
     lateinit var kubernetesClient: KubernetesClient
@@ -77,9 +77,10 @@ class Main {
 
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
-        playerListWatcher = PlayerListWatcher(config[CoreSpec.protocolVersion])
+        proxy.channelRegistrar.register(GalaxyPacket.MESSAGE_CHANNEL_ID)
 
-        proxy.eventManager.register(this, playerListWatcher)
+        proxy.eventManager.register(this, PlayerListWatcher(config[CoreSpec.protocolVersion]))
+        proxy.eventManager.register(this, GalaxyPacket())
 
         // Start lobby TODO auto scale lobby
         GlobalScope.launch {

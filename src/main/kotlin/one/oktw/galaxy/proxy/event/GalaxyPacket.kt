@@ -23,7 +23,7 @@ import java.util.*
 
 class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default) {
     companion object {
-        private val MESSAGE_CHANNEL_ID = MinecraftChannelIdentifier.create("galaxy", "proxy")
+        val MESSAGE_CHANNEL_ID = MinecraftChannelIdentifier.create("galaxy", "proxy")
     }
 
     @Subscribe
