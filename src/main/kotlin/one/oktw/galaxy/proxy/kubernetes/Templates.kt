@@ -74,7 +74,13 @@ object Templates {
                         containerPort = 25565
                         protocol = "TCP"
                     })
-                    readinessProbe { tcpSocket { port = IntOrString(25565) } }
+                    readinessProbe {
+                        initialDelaySeconds = 60
+                        periodSeconds = 15
+                        timeoutSeconds = 1
+                        successThreshold = 1
+                        exec { command = asList("control", "ping") }
+                    }
                     livenessProbe {
                         initialDelaySeconds = 60
                         periodSeconds = 60
