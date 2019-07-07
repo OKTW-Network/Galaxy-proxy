@@ -41,6 +41,6 @@ class KubernetesClient {
     }
 
     suspend fun waitReady(pod: Pod): Pod = withContext(IO) {
-        ReadinessWatcher(pod).also { client.pods().withName(pod.metadata.name).watch(it) }.await(10, TimeUnit.MINUTES)
+        ReadinessWatcher(pod).also { client.pods().withName(pod.metadata.name).watch(it) }.await(5, TimeUnit.MINUTES)
     }
 }
