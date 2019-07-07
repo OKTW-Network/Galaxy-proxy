@@ -7,6 +7,7 @@ import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.proxy.ServerConnection
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier
 import com.velocitypowered.api.proxy.server.ServerInfo
+import io.fabric8.kubernetes.client.KubernetesClientTimeoutException
 import io.fabric8.kubernetes.client.internal.readiness.Readiness
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +51,14 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default) {
                             ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Starting))
                                 .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
 
-                            galaxy = kubernetes.waitReady(galaxy)
+                            galaxy = try {
+                                kubernetes.waitReady(galaxy)
+                            } catch (e: KubernetesClientTimeoutException) {
+                                main.logger.error("Waiting exist galaxy ({}) ready timeout!", data.uuid, e)
+                                ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Failed))
+                                    .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
+                                return@launch
+                            }
 
                             // Send packet to server: Galaxy is starting
                             ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Started))
@@ -70,7 +78,14 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default) {
                         ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Starting))
                             .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
 
-                        galaxy = kubernetes.waitReady(galaxy)
+                        galaxy = try {
+                            kubernetes.waitReady(galaxy)
+                        } catch (e: KubernetesClientTimeoutException) {
+                            main.logger.error("Waiting new galaxy ({}) ready timeout!", data.uuid, e)
+                            ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Failed))
+                                .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
+                            return@launch
+                        }
 
                         // Send packet to server: Galaxy is starting
                         ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Started))
