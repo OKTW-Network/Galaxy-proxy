@@ -1,12 +1,16 @@
 package one.oktw.galaxy.proxy.redis
 
-import com.velocitypowered.api.proxy.server.ServerPing
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.velocitypowered.api.proxy.Player
+import com.velocitypowered.api.util.GameProfile
 import io.lettuce.core.RedisClient
 import io.lettuce.core.ScanArgs
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.withContext
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.config.CoreSpec
-import one.oktw.galaxy.proxy.model.Galaxy
 import java.util.*
 
 class RedisClient {
@@ -15,42 +19,62 @@ class RedisClient {
         private const val DB_GALAXY = 1
     }
 
+    private val gson = Gson()
     private val client = RedisClient.create(main.config[CoreSpec.redis]).connect()
 
-    suspend fun version() = client.async()
-        .info("server")
-        .await()
-        .split("\r\n")
-        .first { it.startsWith("redis_version") }
+    suspend fun version() = withContext(IO) {
+        client.async()
+            .info("server")
+            .await()
+            .split("\r\n")
+            .first { it.startsWith("redis_version") }
+    }
 
     // Player
-    suspend fun addPlayers(players: List<ServerPing.SamplePlayer>, ttl: Long = 300) {
+    suspend fun addPlayers(players: List<Player>, ttl: Long = 180) = withContext(IO) {
         players.forEach { addPlayer(it, ttl) }
     }
 
-    suspend fun addPlayer(player: ServerPing.SamplePlayer, ttl: Long = 300) {
+    suspend fun addPlayer(player: Player, ttl: Long = 180) = withContext(IO) {
         client.async()
             .apply {
                 select(DB_PLAYERS)
-                set(player.name, player.id.toString()).await()
-                expire(player.name, ttl).await()
+                if (exists(player.username).await() == 0L) {
+                    hmset(
+                        player.username,
+                        mapOf(
+                            Pair("uuid", player.uniqueId.toString()),
+                            Pair("latency", player.ping.toString()),
+                            Pair("properties", gson.toJson(player.gameProfileProperties))
+                        )
+                    ).await()
+                }
+
+                hset(player.username, "latency", player.ping.toString()).await()
+                expire(player.username, ttl).await()
             }
+
+        Unit
     }
 
-    suspend fun delPlayer(player: ServerPing.SamplePlayer) {
+    suspend fun delPlayer(name: String) = withContext(IO) {
         client.async()
             .apply { select(DB_PLAYERS) }
-            .del(player.name)
+            .del(name)
+            .await()
+
+        Unit
+    }
+
+    suspend fun getPlayerNumber(): Long = withContext(IO) {
+        client.async()
+            .apply { select(DB_PLAYERS) }
+            .dbsize()
             .await()
     }
 
-    suspend fun getPlayerNumber(): Long = client.async()
-        .apply { select(DB_PLAYERS) }
-        .dbsize()
-        .await()
-
-    suspend fun getPlayers(limit: Long = 12) = client.async()
-        .run {
+    suspend fun getPlayers(limit: Long = 12) = withContext(IO) {
+        client.async().run {
             select(DB_PLAYERS)
 
             scan(ScanArgs().limit(limit))
@@ -60,32 +84,20 @@ class RedisClient {
                     if (isEmpty()) {
                         emptyList()
                     } else {
-                        mget(*toTypedArray())
-                            .await()
-                            .map { ServerPing.SamplePlayer(it.key, UUID.fromString(it.value)) }
+                        map {
+                            val data = hgetall(it).await()
+
+                            GameProfile(
+                                UUID.fromString(data["uuid"]),
+                                it,
+                                gson.fromJson(
+                                    data["properties"],
+                                    object : TypeToken<List<GameProfile.Property>>() {}.type
+                                )
+                            ) to data["latency"]!!.toLong()
+                        }
                     }
                 }
         }
-
-    // Galaxy
-    suspend fun addGalaxy(galaxy: Galaxy) {
-        client.async()
-            .run {
-                select(DB_GALAXY)
-            }
-    }
-
-    suspend fun getGalaxies(): List<UUID> = client.async()
-        .run {
-            select(DB_GALAXY)
-            keys("*").await()
-                .map { UUID.fromString(it) }
-        }
-
-    suspend fun getGalaxyPlayers(galaxy: Galaxy) {
-        client.async()
-            .run {
-                select(DB_GALAXY)
-            }
     }
 }
