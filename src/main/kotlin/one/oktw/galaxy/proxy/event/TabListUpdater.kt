@@ -59,7 +59,7 @@ class TabListUpdater : CoroutineScope by CoroutineScope(Dispatchers.Default) {
             .append("Online Player: ", TextColor.BLUE)
             .append(main.redisClient.getPlayerNumber().toString(), TextColor.GREEN)
             .build()
-        playerListCache = main.redisClient.getPlayers(100).sortedBy { it.first.name }
+        playerListCache = main.redisClient.getPlayers(number = 100).sortedBy { it.first.name }
 
         main.proxy.allPlayers.forEach { player ->
             player.tabList.setHeaderAndFooter(tabHeader, tabFooter)

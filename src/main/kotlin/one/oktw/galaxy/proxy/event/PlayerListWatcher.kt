@@ -49,7 +49,7 @@ class PlayerListWatcher(private val protocolVersion: Int) : CoroutineScope {
     fun onPing(event: ProxyPingEvent) {
         runBlocking {
             val number = async { main.redisClient.getPlayerNumber().toInt() }
-            val players = async { main.redisClient.getPlayers(12) }
+            val players = async { main.redisClient.getPlayers(number = 12) }
 
             event.ping = event.ping.asBuilder()
                 .onlinePlayers(number.await())

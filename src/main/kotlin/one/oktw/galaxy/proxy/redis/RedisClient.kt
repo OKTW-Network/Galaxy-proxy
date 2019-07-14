@@ -73,11 +73,11 @@ class RedisClient {
             .await()
     }
 
-    suspend fun getPlayers(limit: Long = 12) = withContext(IO) {
+    suspend fun getPlayers(keyword: String = "", number: Long = 12) = withContext(IO) {
         client.async().run {
             select(DB_PLAYERS)
 
-            scan(ScanArgs().limit(limit))
+            scan(ScanArgs().limit(number).match("$keyword*"))
                 .await()
                 .keys
                 .run {
