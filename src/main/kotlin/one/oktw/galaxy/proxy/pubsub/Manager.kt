@@ -68,7 +68,7 @@ class Manager(private val channel: Channel, exchange: String) {
         topic: String,
         body: ByteArray
     ) {
-        val unwrappedData = try { ProxyAPI.decode<Any>(body) } catch (err: Throwable) { null } as? MessageWrapper ?: return
+        val unwrappedData = try { ProxyAPI.decode<MessageWrapper>(body) } catch (err: Throwable) { null } ?: return
 
         // drop short circuited message
         if (unwrappedData.source == instanceId) return
