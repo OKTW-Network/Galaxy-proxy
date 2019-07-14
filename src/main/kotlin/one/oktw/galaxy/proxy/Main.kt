@@ -18,6 +18,7 @@ import one.oktw.galaxy.proxy.config.GalaxySpec
 import one.oktw.galaxy.proxy.config.GalaxySpec.Storage.storageClass
 import one.oktw.galaxy.proxy.event.GalaxyPacket
 import one.oktw.galaxy.proxy.event.PlayerListWatcher
+import one.oktw.galaxy.proxy.event.TabListUpdater
 import one.oktw.galaxy.proxy.kubernetes.KubernetesClient
 import one.oktw.galaxy.proxy.redis.RedisClient
 import org.slf4j.Logger
@@ -80,6 +81,7 @@ class Main {
         proxy.channelRegistrar.register(GalaxyPacket.MESSAGE_CHANNEL_ID)
 
         proxy.eventManager.register(this, PlayerListWatcher(config[CoreSpec.protocolVersion]))
+        proxy.eventManager.register(this, TabListUpdater())
         proxy.eventManager.register(this, GalaxyPacket())
 
         // Start lobby TODO auto scale lobby
