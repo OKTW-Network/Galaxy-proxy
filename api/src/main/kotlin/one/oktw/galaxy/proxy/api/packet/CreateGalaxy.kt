@@ -6,5 +6,6 @@ import java.util.*
 
 @BsonDiscriminator
 data class CreateGalaxy(val uuid: UUID = dummyUUID) : Packet {
-    override val type = PacketTypes.CreateGalaxy
+    @BsonDiscriminator
+    data class CreateProgress(val uuid: UUID = dummyUUID, val stage: ProgressStage = ProgressStage.Queue) : Packet
 }

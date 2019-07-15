@@ -22,15 +22,14 @@ import kotlin.collections.HashMap
 
 class ChatExchange(val topic: String) {
     companion object {
-        val eventId = MinecraftChannelIdentifier.create("galaxy", "proxy/chat")
-        val eventIdResponse = MinecraftChannelIdentifier.create("galaxy", "proxy/chat-response")
+        val eventId: MinecraftChannelIdentifier = MinecraftChannelIdentifier.create("galaxy", "proxy/chat")
+        val eventIdResponse: MinecraftChannelIdentifier = MinecraftChannelIdentifier.create("galaxy", "proxy/chat-response")
     }
 
-    var MESSAGE_TIMEOUT = 2000L
-    val topicResponse = "$topic-response"
-    val dummyUUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
-    val listenMap = HashMap<UUID, List<UUID>>()
-    val ackMaps = HashMap<UUID, MessageSend>()
+    private val MESSAGE_TIMEOUT = 2000L
+    private val topicResponse = "$topic-response"
+    private val listenMap = HashMap<UUID, List<UUID>>()
+    private val ackMaps = HashMap<UUID, MessageSend>()
 
     @Subscribe
     fun onPlayerRegister(event: PluginMessageEvent) {
@@ -43,7 +42,7 @@ class ChatExchange(val topic: String) {
             return
         }
 
-        val player = if (packet.user == dummyUUID) {
+        val player = if (packet.user == ProxyAPI.dummyUUID) {
             source.player.uniqueId
         } else {
             packet.user
@@ -63,7 +62,7 @@ class ChatExchange(val topic: String) {
             return
         }
 
-        val packet = if (unformattedPacket.sender == dummyUUID) {
+        val packet = if (unformattedPacket.sender == ProxyAPI.dummyUUID) {
             MessageSend(
                 sender = source.player.uniqueId,
                 message = unformattedPacket.message,

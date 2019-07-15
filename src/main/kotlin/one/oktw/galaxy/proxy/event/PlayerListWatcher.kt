@@ -6,14 +6,13 @@ import com.velocitypowered.api.event.connection.PostLoginEvent
 import com.velocitypowered.api.event.proxy.ProxyPingEvent
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.proxy.Player
-import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.ServerPing
 import kotlinx.coroutines.*
+import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.extension.toSamplePlayer
-import one.oktw.galaxy.proxy.redis.RedisClient
 import java.util.concurrent.TimeUnit
 
-class PlayerListWatcher(private val proxy: ProxyServer, private val redis: RedisClient) : CoroutineScope {
+class PlayerListWatcher(private val protocolVersion: Int) : CoroutineScope {
     private val job = Job()
     private var updatePlayer = true
     override val coroutineContext
@@ -30,12 +29,12 @@ class PlayerListWatcher(private val proxy: ProxyServer, private val redis: Redis
 
     @Subscribe
     fun onPlayerJoin(event: PostLoginEvent) {
-        launch { redis.addPlayer(event.player.toSamplePlayer()) }
+        launch { main.redisClient.addPlayer(event.player.toSamplePlayer()) }
     }
 
     @Subscribe
     fun onPlayerDisconnect(event: DisconnectEvent) {
-        launch { redis.delPlayer(event.player.toSamplePlayer()) }
+        launch { main.redisClient.delPlayer(event.player.toSamplePlayer()) }
     }
 
     @Subscribe
@@ -47,21 +46,21 @@ class PlayerListWatcher(private val proxy: ProxyServer, private val redis: Redis
     @Subscribe
     fun onPing(event: ProxyPingEvent) {
         runBlocking {
-            val number = async { redis.getPlayerNumber().toInt() }
-            val players = async { redis.getPlayers() }
+            val number = async { main.redisClient.getPlayerNumber().toInt() }
+            val players = async { main.redisClient.getPlayers() }
 
             event.ping = event.ping.asBuilder()
                 .onlinePlayers(number.await())
                 .maximumPlayers(Int.MIN_VALUE)
                 .samplePlayers(*players.await().toTypedArray())
-                .version(ServerPing.Version(340, "OKTW Galaxy"))
+                .version(ServerPing.Version(protocolVersion, "OKTW Galaxy"))
                 .build()
         }
     }
 
     private fun forceUpdatePlayers() {
-        proxy.allPlayers
+        main.proxy.allPlayers
             .map(Player::toSamplePlayer)
-            .let { launch { redis.addPlayers(it) } }
+            .let { launch { main.redisClient.addPlayers(it) } }
     }
 }

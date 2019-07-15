@@ -12,5 +12,4 @@ data class MessageUpdateChannel(
     val user: UUID = ProxyAPI.dummyUUID,
     val listenTo: List<UUID> = asList()
 ) : Packet {
-    override val type = PacketTypes.MessageUpdateChannel
 }

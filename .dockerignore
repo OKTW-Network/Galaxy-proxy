@@ -1,0 +1,7 @@
+.git
+.idea
+.gradle
+build
+api/build
+LICENSE
+README.md

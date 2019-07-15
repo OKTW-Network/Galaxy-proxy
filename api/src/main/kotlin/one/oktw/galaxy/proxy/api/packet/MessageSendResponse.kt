@@ -17,5 +17,4 @@ data class MessageSendResponse(
     // result for this operation
     val result: Boolean = true
 ) : Packet {
-    override val type = PacketTypes.MessageSend
 }

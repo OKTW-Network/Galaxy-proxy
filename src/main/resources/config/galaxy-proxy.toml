@@ -1,0 +1,42 @@
+[core]
+protocolVersion = 485
+
+# Redis connection URI
+redis = ""
+
+# Kubernetes API address
+kubernetes = "null"
+
+# rabbitMq
+rabbitMqHost = ""
+rabbitMqPort = 0
+rabbitMqUsername = ""
+rabbitMqPassword = ""
+rabbitMqExchange = ""
+
+[galaxy]
+# Galaxy docker image
+image = "registry.gitlab.com/oktw-network/docker-galaxy:fabric"
+
+# Kubernetes image pull secret
+pullSecret = "gitlab"
+
+    [galaxy.resource]
+    # Container CPU require
+    cpuRequire = "300Mi"
+
+    # Container memory require
+    memoryRequire = "800Mi"
+
+    # Container CPU limit
+    cpuLimit = "2"
+
+    # Container memory limit
+    memoryLimit = "2Gi"
+
+    [galaxy.storage]
+    # Kubernetes storage class
+    storageClass = ""
+
+    # Volume size
+    size = "3Gi"

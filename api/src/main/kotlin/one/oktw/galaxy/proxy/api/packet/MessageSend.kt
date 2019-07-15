@@ -18,5 +18,4 @@ data class MessageSend(
     val id: UUID? = null,
     val requireCallback: Boolean = false
 ) : Packet {
-    override val type = PacketTypes.MessageSend
 }
