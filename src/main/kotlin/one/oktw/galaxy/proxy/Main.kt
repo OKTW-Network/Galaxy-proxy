@@ -28,7 +28,6 @@ import java.net.InetSocketAddress
 import java.nio.file.Files
 import java.nio.file.Paths
 
-
 @Plugin(id = "galaxy-proxy", name = "Galaxy proxy side plugin", version = "1.0-SNAPSHOT")
 class Main {
     companion object {
