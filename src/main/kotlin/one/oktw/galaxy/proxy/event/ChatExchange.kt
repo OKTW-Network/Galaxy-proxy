@@ -17,7 +17,6 @@ import one.oktw.galaxy.proxy.api.packet.MessageUpdateChannel
 import one.oktw.galaxy.proxy.model.ChatData
 import one.oktw.galaxy.proxy.model.ChatResponse
 import java.util.*
-import java.util.Arrays.asList
 import kotlin.collections.HashMap
 
 class ChatExchange(val topic: String) {
@@ -109,9 +108,11 @@ class ChatExchange(val topic: String) {
             val textComponent =
                 ComponentSerializers.JSON.deserialize(event.data.packet.message) as? TextComponent ?: return
 
-            players.forEach {
-                if (event.data.packet.sender in listenMap.getOrDefault(it.uniqueId, asList())) {
-                    it.sendMessage(textComponent)
+            players.forEach {player ->
+                event.data.packet.targets.forEach {target ->
+                    if (target in listenMap.computeIfAbsent(player.uniqueId) { listOf(player.uniqueId, ProxyAPI.globalChatChannel) }) {
+                        player.sendMessage(textComponent)
+                    }
                 }
             }
         }
