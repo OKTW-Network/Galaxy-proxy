@@ -15,10 +15,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
-import one.oktw.galaxy.proxy.api.packet.CreateGalaxy
-import one.oktw.galaxy.proxy.api.packet.Packet
-import one.oktw.galaxy.proxy.api.packet.ProgressStage
-import one.oktw.galaxy.proxy.api.packet.WhoAmI
+import one.oktw.galaxy.proxy.api.packet.*
 import one.oktw.galaxy.proxy.config.GalaxySpec.Storage
 import java.net.InetSocketAddress
 import java.util.*
@@ -40,6 +37,10 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
                 is WhoAmI -> {
                     ProxyAPI.encode(WhoAmI.Result(UUID.fromString(source.server.serverInfo.name)))
                         .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
+                }
+                is SearchPlayer -> {
+                    main.redisClient.getPlayers(data.keyword, data.number.toLong()).map { it.first.name }
+                        .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, ProxyAPI.encode(SearchPlayer.Result(it))) }
                 }
                 is CreateGalaxy -> {
                     val kubernetes = main.kubernetesClient

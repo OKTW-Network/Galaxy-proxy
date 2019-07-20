@@ -1,4 +1,4 @@
-FROM openjdk:12 as builder
+FROM adoptopenjdk/openjdk8-openj9:alpine as builder
 WORKDIR /app
 COPY . .
 RUN ./gradlew --no-daemon build
@@ -15,4 +15,4 @@ COPY --chown=1000 --from=builder /app/build/libs /app/plugins
 USER 1000
 WORKDIR /app
 EXPOSE 25565
-CMD ["sh", "./start.sh"]
+CMD ["./start.sh"]
