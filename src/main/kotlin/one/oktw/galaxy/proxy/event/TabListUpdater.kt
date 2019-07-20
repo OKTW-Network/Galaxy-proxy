@@ -6,16 +6,13 @@ import com.velocitypowered.api.event.player.ServerConnectedEvent
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.proxy.player.TabListEntry
 import com.velocitypowered.api.util.GameProfile
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import net.kyori.text.TextComponent
 import net.kyori.text.format.TextColor
 import one.oktw.galaxy.proxy.Main.Companion.main
 import java.util.concurrent.TimeUnit
 
-class TabListUpdater : CoroutineScope by CoroutineScope(Dispatchers.Default) {
+class TabListUpdater : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJob()) {
     private val tabHeader = TextComponent.builder()
         .append("OKTW", TextColor.DARK_PURPLE).append(" ")
         .append("Galaxy", TextColor.YELLOW).append(" ")
