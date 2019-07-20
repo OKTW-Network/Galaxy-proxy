@@ -78,6 +78,8 @@ class Main {
 
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
+        proxy.commandManager.unregister("server") // Disable server command
+
         proxy.channelRegistrar.register(GalaxyPacket.MESSAGE_CHANNEL_ID)
 
         proxy.eventManager.register(this, PlayerListWatcher(config[CoreSpec.protocolVersion]))
