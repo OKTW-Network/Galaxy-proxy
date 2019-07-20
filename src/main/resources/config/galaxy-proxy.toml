@@ -1,5 +1,5 @@
 [core]
-protocolVersion = 485
+protocolVersion = 498
 
 # Redis connection URI
 redis = ""
@@ -9,7 +9,7 @@ kubernetes = "null"
 
 [galaxy]
 # Galaxy docker image
-image = "registry.gitlab.com/oktw-network/docker-galaxy:fabric"
+image = "registry.gitlab.com/oktw-network/galaxy"
 
 # Kubernetes image pull secret
 pullSecret = "gitlab"

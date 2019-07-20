@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    kapt 'com.velocitypowered:velocity-api:1.0.1'
+    kapt 'com.velocitypowered:velocity-api:1.0.2'
     implementation project(':api')
     implementation 'com.velocitypowered:velocity-api:1.0.1'
     implementation 'io.fabric8:kubernetes-client:4.3.0'
