@@ -13,6 +13,7 @@ import io.fabric8.kubernetes.client.internal.readiness.Readiness
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import one.oktw.galaxy.proxy.command.Lobby
 import one.oktw.galaxy.proxy.config.CoreSpec
 import one.oktw.galaxy.proxy.config.GalaxySpec
 import one.oktw.galaxy.proxy.config.GalaxySpec.Storage.storageClass
@@ -35,8 +36,8 @@ class Main {
 
     val config: Config
 
-    private lateinit var lobby: RegisteredServer
-
+    lateinit var lobby: RegisteredServer
+        private set
     lateinit var kubernetesClient: KubernetesClient
         private set
     lateinit var redisClient: RedisClient
@@ -79,6 +80,7 @@ class Main {
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
         proxy.commandManager.unregister("server") // Disable server command
+        proxy.commandManager.register(Lobby(), "lobby")
 
         proxy.channelRegistrar.register(GalaxyPacket.MESSAGE_CHANNEL_ID)
 
