@@ -9,7 +9,7 @@ kubernetes = "null"
 
 # rabbitMq
 rabbitMqHost = ""
-rabbitMqPort = 0
+rabbitMqPort = 5672
 rabbitMqUsername = ""
 rabbitMqPassword = ""
 rabbitMqExchange = ""
