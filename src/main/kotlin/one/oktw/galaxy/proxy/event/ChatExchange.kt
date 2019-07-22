@@ -8,7 +8,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.kyori.text.TextComponent
-import net.kyori.text.serializer.ComponentSerializers
+import net.kyori.text.serializer.gson.GsonComponentSerializer
 import one.oktw.galaxy.proxy.Main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.MessageSend
@@ -106,7 +106,7 @@ class ChatExchange(val topic: String) {
 
         if (event.data is ChatData) {
             val textComponent =
-                ComponentSerializers.JSON.deserialize(event.data.packet.message) as? TextComponent ?: return
+                GsonComponentSerializer.INSTANCE.deserialize(event.data.packet.message) as? TextComponent ?: return
 
             players.forEach {player ->
                 event.data.packet.targets.forEach {target ->

@@ -15,11 +15,13 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import one.oktw.galaxy.proxy.event.ChatExchange
+import one.oktw.galaxy.proxy.command.Lobby
 import one.oktw.galaxy.proxy.config.CoreSpec
 import one.oktw.galaxy.proxy.config.GalaxySpec
 import one.oktw.galaxy.proxy.config.GalaxySpec.Storage.storageClass
 import one.oktw.galaxy.proxy.event.GalaxyPacket
 import one.oktw.galaxy.proxy.event.PlayerListWatcher
+import one.oktw.galaxy.proxy.event.TabListUpdater
 import one.oktw.galaxy.proxy.kubernetes.KubernetesClient
 import one.oktw.galaxy.proxy.pubsub.Manager
 import one.oktw.galaxy.proxy.redis.RedisClient
@@ -27,6 +29,7 @@ import org.slf4j.Logger
 import java.net.InetSocketAddress
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.system.exitProcess
 
 @Plugin(id = "galaxy-proxy", name = "Galaxy proxy side plugin", version = "1.0-SNAPSHOT")
 class Main {
@@ -38,8 +41,8 @@ class Main {
 
     val config: Config
 
-    private lateinit var lobby: RegisteredServer
-
+    lateinit var lobby: RegisteredServer
+        private set
     lateinit var kubernetesClient: KubernetesClient
         private set
     lateinit var redisClient: RedisClient
@@ -96,16 +99,24 @@ class Main {
 
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
+        proxy.commandManager.unregister("server") // Disable server command
+        proxy.commandManager.register(Lobby(), "lobby")
+
         proxy.channelRegistrar.register(GalaxyPacket.MESSAGE_CHANNEL_ID)
 
         proxy.eventManager.register(this, PlayerListWatcher(config[CoreSpec.protocolVersion]))
+        proxy.eventManager.register(this, TabListUpdater())
         proxy.eventManager.register(this, GalaxyPacket())
 
         // Start lobby TODO auto scale lobby
         GlobalScope.launch {
-            lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config[storageClass], "10Gi")
-                .let { if (!Readiness.isReady(it)) kubernetesClient.waitReady(it) else it }
-                .let { proxy.registerServer(ServerInfo("galaxy-lobby", InetSocketAddress(it.status.podIP, 25565))) }
+            try {
+                lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config[storageClass], "10Gi")
+                    .let { if (!Readiness.isReady(it)) kubernetesClient.waitReady(it) else it }
+                    .let { proxy.registerServer(ServerInfo("galaxy-lobby", InetSocketAddress(it.status.podIP, 25565))) }
+            } catch (e: Exception) {
+                exitProcess(1)
+            }
         }
 
         // Connect player to lobby

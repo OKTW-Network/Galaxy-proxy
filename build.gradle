@@ -1,6 +1,6 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.3.31'
-    id "org.jetbrains.kotlin.kapt" version "1.3.31"
+    id 'org.jetbrains.kotlin.jvm' version '1.3.41'
+    id "org.jetbrains.kotlin.kapt" version "1.3.41"
     id 'com.github.johnrengelman.shadow' version '5.0.0'
 }
 
@@ -13,19 +13,19 @@ repositories {
     maven { url "https://kotlin.bintray.com/kotlinx" }
     maven {
         name 'velocity'
-        url 'https://repo.velocitypowered.com/snapshots/'
+        url 'https://repo.velocitypowered.com/releases/'
     }
 }
 
 dependencies {
-    kapt 'com.velocitypowered:velocity-api:1.0-SNAPSHOT'
+    kapt 'com.velocitypowered:velocity-api:1.0.2'
     implementation project(':api')
-    implementation 'com.velocitypowered:velocity-api:1.0-SNAPSHOT'
+    implementation 'com.velocitypowered:velocity-api:1.0.1'
     implementation 'io.fabric8:kubernetes-client:4.3.0'
     implementation 'com.fkorotkov:kubernetes-dsl:2.1'
-    implementation 'io.lettuce:lettuce-core:5.1.6.RELEASE'
+    implementation 'io.lettuce:lettuce-core:5.1.7.RELEASE'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.0-M1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.0-M2'
     implementation 'com.uchuhimo:konf:0.13.3'
     compile 'com.rabbitmq:amqp-client:5.6.0'
 }

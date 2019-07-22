@@ -1,5 +1,5 @@
 [core]
-protocolVersion = 485
+protocolVersion = 498
 
 # Redis connection URI
 redis = ""
@@ -16,7 +16,7 @@ rabbitMqExchange = ""
 
 [galaxy]
 # Galaxy docker image
-image = "registry.gitlab.com/oktw-network/docker-galaxy:fabric"
+image = "registry.gitlab.com/oktw-network/galaxy"
 
 # Kubernetes image pull secret
 pullSecret = "gitlab"
