@@ -72,6 +72,7 @@ shadowJar {
         include dependency("io.projectreactor:")
         include dependency("io.netty:")
         include dependency("org.reactivestreams:")
+        include dependency("com.rabbitmq:")
     }
 
 //    relocate "kotlin", "one.oktw.relocate.kotlin"
