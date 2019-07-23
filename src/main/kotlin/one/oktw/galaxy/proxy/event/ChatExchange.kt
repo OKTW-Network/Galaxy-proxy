@@ -22,7 +22,7 @@ import kotlin.collections.HashMap
 class ChatExchange(val topic: String) {
     companion object {
         val eventId: MinecraftChannelIdentifier = MinecraftChannelIdentifier.create("galaxy", "proxy-chat")
-        val eventIdResponse: MinecraftChannelIdentifier = MinecraftChannelIdentifier.create("galaxy", "proxy/chat-response")
+        val eventIdResponse: MinecraftChannelIdentifier = MinecraftChannelIdentifier.create("galaxy", "proxy-chat-response")
     }
 
     private val MESSAGE_TIMEOUT = 2000L
