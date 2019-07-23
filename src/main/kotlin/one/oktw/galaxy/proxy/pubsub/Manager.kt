@@ -3,6 +3,7 @@ package one.oktw.galaxy.proxy.pubsub
 import com.rabbitmq.client.*
 import one.oktw.galaxy.proxy.Main
 import one.oktw.galaxy.proxy.api.ProxyAPI
+import one.oktw.galaxy.proxy.api.packet.Packet
 import one.oktw.galaxy.proxy.event.MessageDeliveryEvent
 import one.oktw.galaxy.proxy.pubsub.data.MessageWrapper
 import java.util.*
@@ -82,7 +83,7 @@ class Manager(private val channel: Channel, exchange: String) {
 
     }
 
-    fun send(topic: String, item: Any) {
+    fun send(topic: String, item: Packet) {
         MessageDeliveryEvent(
             topic,
             item

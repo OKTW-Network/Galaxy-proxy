@@ -52,9 +52,9 @@ class ChatExchange(val topic: String) {
 
     @Subscribe
     fun onServerSend(event: PluginMessageEvent) {
+        Main.main.logger.info("received server message")
         if (!event.identifier.equals(eventId)) return
         val source = event.source as? ServerConnection ?: return
-
         val unformattedPacket = try {
             ProxyAPI.decode<MessageSend>(event.data)
         } catch (err: Throwable) {
@@ -92,7 +92,7 @@ class ChatExchange(val topic: String) {
             }
         }
 
-        val chatData = ChatData(UUID.fromString(source.serverInfo.name), packet)
+        val chatData = ChatData(try { UUID.fromString(source.serverInfo.name) } catch (err: Throwable) { ProxyAPI.dummyUUID }, packet)
 
         Main.main.manager.send(topic, chatData)
 
@@ -100,17 +100,22 @@ class ChatExchange(val topic: String) {
 
     @Subscribe
     fun onRelay(event: MessageDeliveryEvent) {
+        Main.main.logger.info("on relay message")
+        Main.main.logger.info(event.topic)
         if (event.topic != topic) return
 
         val players = Main.main.proxy.allPlayers
 
         if (event.data is ChatData) {
+            Main.main.logger.info(event.data.packet.targets.joinToString(" "))
+            Main.main.logger.info(event.data.packet.message)
             val textComponent =
-                GsonComponentSerializer.INSTANCE.deserialize(event.data.packet.message) as? TextComponent ?: return
+                GsonComponentSerializer.INSTANCE.deserialize(event.data.packet.message)
 
             players.forEach {player ->
                 event.data.packet.targets.forEach {target ->
                     if (target in listenMap.computeIfAbsent(player.uniqueId) { listOf(player.uniqueId, ProxyAPI.globalChatChannel) }) {
+                        Main.main.logger.info("send")
                         player.sendMessage(textComponent)
                     }
                 }

@@ -127,5 +127,6 @@ class Main {
         }
 
         chatExchange = ChatExchange(MESSAGE_TOPIC)
+        proxy.eventManager.register(this, chatExchange)
     }
 }
