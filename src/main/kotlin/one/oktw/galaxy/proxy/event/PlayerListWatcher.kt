@@ -53,7 +53,7 @@ class PlayerListWatcher(private val protocolVersion: Int) : CoroutineScope {
 
             event.ping = event.ping.asBuilder()
                 .onlinePlayers(number.await())
-                .maximumPlayers(Int.MIN_VALUE)
+                .maximumPlayers(number.await() + 1)
                 .samplePlayers(*players.await()
                     .map { (profile, _) -> ServerPing.SamplePlayer(profile.name, profile.id) }
                     .toTypedArray()
