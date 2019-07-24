@@ -31,8 +31,10 @@ class ChatExchange(val topic: String) {
 
     @Subscribe
     fun onPlayerRegister(event: PluginMessageEvent) {
-        if (!event.identifier.equals(eventId)) return
         val source = event.source as? ServerConnection ?: return
+
+        if (!event.identifier.equals(eventId)) return
+        event.result = PluginMessageEvent.ForwardResult.handled()
 
         val packet = try {
             ProxyAPI.decode<MessageUpdateChannel>(event.data)
@@ -51,8 +53,11 @@ class ChatExchange(val topic: String) {
 
     @Subscribe
     fun onServerSend(event: PluginMessageEvent) {
-        if (!event.identifier.equals(eventId)) return
         val source = event.source as? ServerConnection ?: return
+
+        if (!event.identifier.equals(eventId)) return
+        event.result = PluginMessageEvent.ForwardResult.handled()
+
         val unformattedPacket = try {
             ProxyAPI.decode<MessageSend>(event.data)
         } catch (err: Throwable) {
