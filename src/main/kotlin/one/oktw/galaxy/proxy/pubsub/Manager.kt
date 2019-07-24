@@ -1,7 +1,7 @@
 package one.oktw.galaxy.proxy.pubsub
 
 import com.rabbitmq.client.*
-import one.oktw.galaxy.proxy.Main
+import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.Packet
 import one.oktw.galaxy.proxy.event.MessageDeliveryEvent
@@ -9,10 +9,9 @@ import one.oktw.galaxy.proxy.pubsub.data.MessageWrapper
 import java.util.*
 import kotlin.collections.HashMap
 
-@Suppress("MemberVisibilityCanBePrivate")
 class Manager(private val channel: Channel, exchange: String) {
     companion object {
-        class ConsumerWrapper(val topic: String, val manager: Manager) : Consumer {
+        class ConsumerWrapper(private val topic: String, private val manager: Manager) : Consumer {
             override fun handleRecoverOk(consumerTag: String?) {
                 // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
@@ -65,31 +64,24 @@ class Manager(private val channel: Channel, exchange: String) {
         channel.basicCancel(tags[topic])
     }
 
-    fun handleDelivery(
-        topic: String,
-        body: ByteArray
-    ) {
-        val unwrappedData = try { ProxyAPI.decode<MessageWrapper>(body) } catch (err: Throwable) { null } ?: return
+    fun handleDelivery(topic: String, body: ByteArray) {
+        val unwrappedData = try {
+            ProxyAPI.decode<MessageWrapper>(body)
+        } catch (err: Throwable) {
+            main.logger.error("Decode MessageWrapper packet fail", err)
+            null
+        } ?: return
 
         // drop short circuited message
         if (unwrappedData.source == instanceId) return
 
-        MessageDeliveryEvent(
-            topic,
-            unwrappedData.message
-        ).let {
-            Main.main.proxy.eventManager.fireAndForget(it)
-        }
-
+        MessageDeliveryEvent(topic, unwrappedData.message)
+            .let { main.proxy.eventManager.fireAndForget(it) }
     }
 
     fun send(topic: String, item: Packet) {
-        MessageDeliveryEvent(
-            topic,
-            item
-        ).let {
-            Main.main.proxy.eventManager.fireAndForget(it)
-        }
+        MessageDeliveryEvent(topic, item)
+            .let { main.proxy.eventManager.fireAndForget(it) }
 
         send(topic, ProxyAPI.encode(MessageWrapper(instanceId, item)))
     }

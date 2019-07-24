@@ -8,7 +8,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.kyori.text.serializer.gson.GsonComponentSerializer
-import one.oktw.galaxy.proxy.Main
+import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.MessageSend
 import one.oktw.galaxy.proxy.api.packet.MessageSendResponse
@@ -19,52 +19,48 @@ import one.oktw.galaxy.proxy.model.ChatResponse
 import java.util.*
 import kotlin.collections.HashMap
 
-class ChatExchange(val topic: String) {
+class ChatExchange(private val topic: String) {
     companion object {
-        val eventId: MinecraftChannelIdentifier = MinecraftChannelIdentifier.create("galaxy", "proxy-chat")
-        val eventIdResponse: MinecraftChannelIdentifier =
-            MinecraftChannelIdentifier.create("galaxy", "proxy-chat-response")
+        private const val MESSAGE_TIMEOUT = 2000L
+
+        val eventId = MinecraftChannelIdentifier.create("galaxy", "proxy-chat")!!
+        val eventIdResponse = MinecraftChannelIdentifier.create("galaxy", "proxy-chat-response")!!
     }
 
-    private val MESSAGE_TIMEOUT = 2000L
     private val topicResponse = "$topic-response"
     private val listenMap = HashMap<UUID, List<UUID>>()
     private val ackMaps = HashMap<UUID, MessageSend>()
 
     @Subscribe
     fun onPlayerRegister(event: PluginMessageEvent) {
-        val source = event.source as? ServerConnection ?: return
-
-        if (!event.identifier.equals(eventId)) return
+        if (event.identifier != eventId) return
         event.result = PluginMessageEvent.ForwardResult.handled()
+
+        val source = event.source as? ServerConnection ?: return
 
         val packet = try {
             ProxyAPI.decode<Packet>(event.data) as? MessageUpdateChannel ?: return
         } catch (err: Throwable) {
-            Main.main.logger.error("Failed decode", err)
+            main.logger.error("Failed decode", err)
             return
         }
 
-        val player = if (packet.user == ProxyAPI.dummyUUID) {
-            source.player.uniqueId
-        } else {
-            packet.user
-        }
+        val player = if (packet.user == ProxyAPI.dummyUUID) source.player.uniqueId else packet.user
 
         listenMap[player] = packet.listenTo
     }
 
     @Subscribe
     fun onServerSend(event: PluginMessageEvent) {
-        val source = event.source as? ServerConnection ?: return
-
-        if (!event.identifier.equals(eventId)) return
+        if (event.identifier != eventId) return
         event.result = PluginMessageEvent.ForwardResult.handled()
+
+        val source = event.source as? ServerConnection ?: return
 
         val unformattedPacket = try {
             ProxyAPI.decode<Packet>(event.data) as? MessageSend ?: return
         } catch (err: Throwable) {
-            Main.main.logger.error("Failed decode", err)
+            main.logger.error("Failed decode", err)
             return
         }
 
@@ -86,7 +82,7 @@ class ChatExchange(val topic: String) {
                 delay(MESSAGE_TIMEOUT)
                 ackMaps.remove(packet.id!!)
 
-                val players = Main.main.proxy.allPlayers
+                val players = main.proxy.allPlayers
                 players.find { it.uniqueId == packet.sender }?.sendPluginMessage(
                     eventIdResponse, ProxyAPI.encode(
                         MessageSendResponse(
@@ -107,30 +103,20 @@ class ChatExchange(val topic: String) {
             }, packet
         )
 
-        Main.main.manager.send(topic, chatData)
-
+        main.manager.send(topic, chatData)
     }
 
     @Subscribe
     fun onRelay(event: MessageDeliveryEvent) {
         if (event.topic != topic) return
 
-        val players = Main.main.proxy.allPlayers
-
         if (event.data is ChatData) {
-            val textComponent =
-                GsonComponentSerializer.INSTANCE.deserialize(event.data.packet.message)
+            val textComponent = GsonComponentSerializer.INSTANCE.deserialize(event.data.packet.message)
 
-            players.forEach { player ->
+            main.proxy.allPlayers.forEach { player ->
                 event.data.packet.targets.forEach { target ->
-                    if (target in listenMap.computeIfAbsent(player.uniqueId) {
-                            listOf(
-                                player.uniqueId,
-                                ProxyAPI.globalChatChannel
-                            )
-                        }) {
-                        player.sendMessage(textComponent)
-                    }
+                    listenMap.computeIfAbsent(player.uniqueId) { listOf(player.uniqueId, ProxyAPI.globalChatChannel) }
+                        .let { if (target in it) player.sendMessage(textComponent) }
                 }
             }
         }
@@ -140,21 +126,14 @@ class ChatExchange(val topic: String) {
     fun onAck(event: MessageDeliveryEvent) {
         if (event.topic != topicResponse) return
 
-        val players = Main.main.proxy.allPlayers
-
         if (event.data is ChatResponse) {
             if (event.data.success && ackMaps.contains(event.data.id)) {
                 val packet = ackMaps[event.data.id] ?: return
                 ackMaps.remove(event.data.id)
 
-                players.find { it.uniqueId == packet.sender }?.sendPluginMessage(
-                    eventIdResponse, ProxyAPI.encode(
-                        MessageSendResponse(
-                            sender = packet.sender,
-                            id = packet.id!!,
-                            result = true
-                        )
-                    )
+                main.proxy.allPlayers.find { it.uniqueId == packet.sender }?.sendPluginMessage(
+                    eventIdResponse,
+                    ProxyAPI.encode(MessageSendResponse(sender = packet.sender, id = packet.id!!, result = true))
                 )
             }
         }
