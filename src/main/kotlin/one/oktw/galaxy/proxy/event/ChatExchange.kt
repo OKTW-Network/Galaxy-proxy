@@ -88,7 +88,7 @@ class ChatExchange(val topic: String) {
                         MessageSendResponse(
                             sender = packet.sender,
                             id = packet.id!!,
-                            result = true
+                            result = false
                         )
                     )
                 )
