@@ -13,6 +13,7 @@ import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.MessageSend
 import one.oktw.galaxy.proxy.api.packet.MessageSendResponse
 import one.oktw.galaxy.proxy.api.packet.MessageUpdateChannel
+import one.oktw.galaxy.proxy.api.packet.Packet
 import one.oktw.galaxy.proxy.model.ChatData
 import one.oktw.galaxy.proxy.model.ChatResponse
 import java.util.*
@@ -21,7 +22,8 @@ import kotlin.collections.HashMap
 class ChatExchange(val topic: String) {
     companion object {
         val eventId: MinecraftChannelIdentifier = MinecraftChannelIdentifier.create("galaxy", "proxy-chat")
-        val eventIdResponse: MinecraftChannelIdentifier = MinecraftChannelIdentifier.create("galaxy", "proxy-chat-response")
+        val eventIdResponse: MinecraftChannelIdentifier =
+            MinecraftChannelIdentifier.create("galaxy", "proxy-chat-response")
     }
 
     private val MESSAGE_TIMEOUT = 2000L
@@ -37,8 +39,9 @@ class ChatExchange(val topic: String) {
         event.result = PluginMessageEvent.ForwardResult.handled()
 
         val packet = try {
-            ProxyAPI.decode<MessageUpdateChannel>(event.data)
+            ProxyAPI.decode<Packet>(event.data) as? MessageUpdateChannel ?: return
         } catch (err: Throwable) {
+            Main.main.logger.error("Failed decode", err)
             return
         }
 
@@ -59,8 +62,9 @@ class ChatExchange(val topic: String) {
         event.result = PluginMessageEvent.ForwardResult.handled()
 
         val unformattedPacket = try {
-            ProxyAPI.decode<MessageSend>(event.data)
+            ProxyAPI.decode<Packet>(event.data) as? MessageSend ?: return
         } catch (err: Throwable) {
+            Main.main.logger.error("Failed decode", err)
             return
         }
 
@@ -95,7 +99,13 @@ class ChatExchange(val topic: String) {
             }
         }
 
-        val chatData = ChatData(try { UUID.fromString(source.serverInfo.name) } catch (err: Throwable) { ProxyAPI.dummyUUID }, packet)
+        val chatData = ChatData(
+            try {
+                UUID.fromString(source.serverInfo.name)
+            } catch (err: Throwable) {
+                ProxyAPI.dummyUUID
+            }, packet
+        )
 
         Main.main.manager.send(topic, chatData)
 
@@ -111,9 +121,14 @@ class ChatExchange(val topic: String) {
             val textComponent =
                 GsonComponentSerializer.INSTANCE.deserialize(event.data.packet.message)
 
-            players.forEach {player ->
-                event.data.packet.targets.forEach {target ->
-                    if (target in listenMap.computeIfAbsent(player.uniqueId) { listOf(player.uniqueId, ProxyAPI.globalChatChannel) }) {
+            players.forEach { player ->
+                event.data.packet.targets.forEach { target ->
+                    if (target in listenMap.computeIfAbsent(player.uniqueId) {
+                            listOf(
+                                player.uniqueId,
+                                ProxyAPI.globalChatChannel
+                            )
+                        }) {
                         player.sendMessage(textComponent)
                     }
                 }
