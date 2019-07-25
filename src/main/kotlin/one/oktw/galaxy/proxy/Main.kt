@@ -1,6 +1,7 @@
 package one.oktw.galaxy.proxy
 
 import com.google.inject.Inject
+import com.rabbitmq.client.ConnectionFactory
 import com.uchuhimo.konf.Config
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
@@ -13,6 +14,7 @@ import io.fabric8.kubernetes.client.internal.readiness.Readiness
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import one.oktw.galaxy.proxy.event.ChatExchange
 import one.oktw.galaxy.proxy.command.Lobby
 import one.oktw.galaxy.proxy.config.CoreSpec
 import one.oktw.galaxy.proxy.config.GalaxySpec
@@ -21,6 +23,7 @@ import one.oktw.galaxy.proxy.event.GalaxyPacket
 import one.oktw.galaxy.proxy.event.PlayerListWatcher
 import one.oktw.galaxy.proxy.event.TabListUpdater
 import one.oktw.galaxy.proxy.kubernetes.KubernetesClient
+import one.oktw.galaxy.proxy.pubsub.Manager
 import one.oktw.galaxy.proxy.redis.RedisClient
 import org.slf4j.Logger
 import java.net.InetSocketAddress
@@ -31,6 +34,7 @@ import kotlin.system.exitProcess
 @Plugin(id = "galaxy-proxy", name = "Galaxy proxy side plugin", version = "1.0-SNAPSHOT")
 class Main {
     companion object {
+        const val MESSAGE_TOPIC = "chat"
         lateinit var main: Main
             private set
     }
@@ -47,6 +51,8 @@ class Main {
         private set
     lateinit var logger: Logger
         private set
+    lateinit var chatExchange: ChatExchange
+        private set
 
     init {
         Files.createDirectories(Paths.get("config"))
@@ -60,6 +66,7 @@ class Main {
             .from.toml.file("config/galaxy-proxy.toml")
             .from.env()
     }
+    lateinit var manager: Manager
 
     @Inject
     fun init(proxy: ProxyServer, logger: Logger) {
@@ -70,11 +77,23 @@ class Main {
         this.kubernetesClient = KubernetesClient()
         this.redisClient = RedisClient()
 
+        val factory = ConnectionFactory()
+        factory.host = config[CoreSpec.rabbitMqHost]
+        factory.port = config[CoreSpec.rabbitMqPort]
+        factory.username = config[CoreSpec.rabbitMqUsername]
+        factory.password = config[CoreSpec.rabbitMqPassword]
+        val connection = factory.newConnection()
+        val channel = connection.createChannel()
+        manager = Manager(channel, config[CoreSpec.rabbitMqExchange])
+        manager.subscribe(MESSAGE_TOPIC)
+
         runBlocking {
             logger.info("Kubernetes Version: ${kubernetesClient.info().gitVersion}")
             logger.info("Redis version: ${redisClient.version()}")
         }
 
+        proxy.channelRegistrar.register(ChatExchange.eventId)
+        proxy.channelRegistrar.register(ChatExchange.eventIdResponse)
         logger.info("Galaxy Init!")
     }
 
@@ -106,5 +125,8 @@ class Main {
 
             it.result = ServerPreConnectEvent.ServerResult.allowed(lobby)
         }
+
+        chatExchange = ChatExchange(MESSAGE_TOPIC)
+        proxy.eventManager.register(this, chatExchange)
     }
 }

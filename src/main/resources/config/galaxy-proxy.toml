@@ -7,6 +7,13 @@ redis = ""
 # Kubernetes API address
 kubernetes = "null"
 
+# rabbitMq
+rabbitMqHost = ""
+rabbitMqPort = 5672
+rabbitMqUsername = ""
+rabbitMqPassword = ""
+rabbitMqExchange = ""
+
 [galaxy]
 # Galaxy docker image
 image = "registry.gitlab.com/oktw-network/galaxy"

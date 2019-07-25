@@ -14,7 +14,8 @@ import java.util.*
 
 object ProxyAPI {
     private val DEFAULT_ENCODER_CONTEXT = EncoderContext.builder().build()
-    internal val dummyUUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
+    val dummyUUID: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000")
+    val globalChatChannel: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
 
     val codecRegistries: CodecRegistry = CodecRegistries.fromProviders(
         ValueCodecProvider(),
