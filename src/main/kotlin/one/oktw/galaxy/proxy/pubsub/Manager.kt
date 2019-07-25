@@ -9,7 +9,7 @@ import one.oktw.galaxy.proxy.pubsub.data.MessageWrapper
 import java.util.*
 import kotlin.collections.HashMap
 
-class Manager(private val channel: Channel, exchange: String) {
+class Manager(private val channel: Channel, private val exchange: String) {
     companion object {
         class ConsumerWrapper(private val topic: String, private val manager: Manager) : Consumer {
             override fun handleRecoverOk(consumerTag: String?) {
@@ -34,8 +34,8 @@ class Manager(private val channel: Channel, exchange: String) {
                 properties: AMQP.BasicProperties,
                 body: ByteArray
             ) {
-                manager.handleDelivery(topic, body)
                 manager.channel.basicAck(envelope.deliveryTag, false)
+                manager.handleDelivery(topic, body)
             }
 
             override fun handleCancelOk(consumerTag: String?) {
@@ -44,24 +44,35 @@ class Manager(private val channel: Channel, exchange: String) {
         }
     }
 
+    private val queues: HashMap<String, String> = HashMap()
     private val tags: HashMap<String, String> = HashMap()
     private val mqOpts: HashMap<String, Any> = HashMap<String, Any>().apply { this["x-message-ttl"] = 0 }
-    private val instanceId = UUID.randomUUID()
+    private val instanceId: UUID = UUID.randomUUID()
 
     init {
-        channel.exchangeDeclare(exchange, "fanout")
     }
 
     fun subscribe(topic: String) {
-        if (tags[topic] != null) return
-        channel.queueDeclare(topic, false, false, false, mqOpts)
-        tags[topic] = channel.basicConsume(topic, ConsumerWrapper(topic, this))
+        if (queues[topic] != null) return
+
+        channel.exchangeDeclare("$exchange-$topic", "fanout")
+        val queue = channel.queueDeclare().queue
+
+        channel.queueBind(queue, "$exchange-$topic", "")
+
+        queues[topic] = queue
+        tags[topic] = channel.basicConsume(queue, ConsumerWrapper(topic, this))
     }
 
     fun unsubscribe(topic: String) {
+        if (queues[topic] == null) return
         if (tags[topic] == null) return
-        channel.queueDeclare(topic, false, false, false, mqOpts)
+
+        channel.queueUnbind(queues[topic], "$exchange-$topic", "")
         channel.basicCancel(tags[topic])
+
+        queues.remove(topic)
+        tags.remove(topic)
     }
 
     fun handleDelivery(topic: String, body: ByteArray) {
@@ -87,7 +98,6 @@ class Manager(private val channel: Channel, exchange: String) {
     }
 
     fun send(topic: String, body: ByteArray) {
-        channel.queueDeclare(topic, false, false, false, mqOpts)
-        channel.basicPublish("", topic, null, body)
+        channel.basicPublish("$exchange-$topic", topic, null, body)
     }
 }

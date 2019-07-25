@@ -83,6 +83,9 @@ class Main {
         factory.username = config[CoreSpec.rabbitMqUsername]
         factory.password = config[CoreSpec.rabbitMqPassword]
         val connection = factory.newConnection()
+        connection.addShutdownListener {
+            logger.error("conn killed", it)
+        }
         val channel = connection.createChannel()
         manager = Manager(channel, config[CoreSpec.rabbitMqExchange])
         manager.subscribe(MESSAGE_TOPIC)
