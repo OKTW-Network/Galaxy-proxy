@@ -15,9 +15,6 @@ private fun ProxyConfig.getForwardingSecret(): ByteArray {
 
 object Templates {
     private val config = main.config
-    private val JAVA_CLASS_CACHE = newVolume {
-        this.name = "javasharedresources"; hostPath { path = "/tmp/javasharedresources"; type = "DirectoryOrCreate" }
-    }
     private val forwardSecret by lazy {
         main.proxy.configuration.getForwardingSecret().toString(StandardCharsets.UTF_8)
     }
@@ -38,59 +35,45 @@ object Templates {
     }
 
     fun galaxy(name: String, pvc: String): Pod {
-        val mounts = asList(
-            newVolumeMount { this.name = "javasharedresources";mountPath = "/app/javasharedresources" },
-            newVolumeMount { this.name = "minecraft";subPath = "world";mountPath = "/app/minecraft/world" }
-        )
-
         return newPod {
             metadata { this.name = name }
             spec {
                 imagePullSecrets = asList(LocalObjectReference(config[GalaxySpec.pullSecret]))
                 securityContext { fsGroup = 1000 }
-                this.volumes = asList(
-                    JAVA_CLASS_CACHE,
-                    newVolume { this.name = "minecraft"; persistentVolumeClaim { claimName = pvc } }
-                )
-
-                initContainers = asList(newContainer {
-                    this.name = "volume-mount-hack"
-                    image = "busybox"
-                    imagePullPolicy = "IfNotPresent"
-                    command = asList(
-                        "sh",
-                        "-c",
-                        "chown 1000 /app/javasharedresources /app/minecraft/world"
-                    )
-                    volumeMounts = mounts
-                })
+                this.volumes = asList(newVolume { this.name = "minecraft"; persistentVolumeClaim { claimName = pvc } })
 
                 containers = asList(newContainer {
                     this.name = "minecraft"
                     image = config[GalaxySpec.image]
-                    lifecycle { preStop { exec { command = asList("control", "stop") } } }
+                    env = asList(EnvVar("FABRIC_PROXY_SECRET", forwardSecret, null))
+
                     ports = asList(newContainerPort {
                         this.name = "minecraft"
                         containerPort = 25565
                         protocol = "TCP"
                     })
+
+                    volumeMounts = asList(
+                        newVolumeMount { this.name = "minecraft";subPath = "world";mountPath = "/app/minecraft/world" }
+                    )
+
+                    lifecycle { preStop { exec { command = asList("control", "stop") } } }
                     readinessProbe {
-                        initialDelaySeconds = 60
+                        initialDelaySeconds = 30
                         periodSeconds = 15
                         timeoutSeconds = 1
                         successThreshold = 1
                         exec { command = asList("control", "ping") }
                     }
                     livenessProbe {
-                        initialDelaySeconds = 60
+                        initialDelaySeconds = 30
                         periodSeconds = 60
                         timeoutSeconds = 10
                         successThreshold = 1
                         failureThreshold = 3
                         exec { command = asList("control", "ping") }
                     }
-                    volumeMounts = mounts
-                    env = asList(EnvVar("FABRIC_PROXY_SECRET", forwardSecret, null))
+
                     resources {
                         requests = mapOf(
                             Pair("cpu", Quantity(config[GalaxySpec.Resource.cpuRequire])),
@@ -105,12 +88,4 @@ object Templates {
             }
         }
     }
-//
-//    private fun exec(vararg command: String) = V1ExecActionBuilder().withCommand(*command).build()
-//
-//    private fun PVC(name: String) = V1VolumeBuilder()
-//        .withNewPersistentVolumeClaim()
-//        .withClaimName(name)
-//        .endPersistentVolumeClaim()
-//        .build()
 }
