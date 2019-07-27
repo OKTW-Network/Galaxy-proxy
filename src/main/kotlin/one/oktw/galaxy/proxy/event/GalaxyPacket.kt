@@ -96,9 +96,15 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
 
                     // Send player to galaxy TODO only create not join
                     main.proxy.run {
-                        getServer(id)
-                            .orElseGet { registerServer(ServerInfo(id, InetSocketAddress(galaxy.status.podIP, 25565))) }
-                            .let(player::createConnectionRequest).fireAndForget()
+                        val address = InetSocketAddress(galaxy.status.podIP, 25565)
+                        var server = getServer(id).orElseGet { registerServer(ServerInfo(id, address)) }
+
+                        if (server.serverInfo.address != address) {
+                            unregisterServer(server.serverInfo)
+                            server = registerServer(ServerInfo(id, address))
+                        }
+
+                        player.createConnectionRequest(server).fireAndForget()
                     }
                 }
             }
