@@ -7,6 +7,8 @@ import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.kyori.text.TranslatableComponent
+import net.kyori.text.format.TextColor
 import net.kyori.text.serializer.gson.GsonComponentSerializer
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
@@ -114,9 +116,30 @@ class ChatExchange(private val topic: String) {
             val textComponent = GsonComponentSerializer.INSTANCE.deserialize(event.data.packet.message)
 
             main.proxy.allPlayers.forEach { player ->
+                val playerSource = player.currentServer.orElse(null)?.let {
+                    try {
+                        UUID.fromString(it.serverInfo.name)
+                    } catch (err: Throwable) {
+                        null
+                    }
+                } ?: ProxyAPI.dummyUUID
+
                 event.data.packet.targets.forEach { target ->
                     listenMap.computeIfAbsent(player.uniqueId) { listOf(player.uniqueId, ProxyAPI.globalChatChannel) }
-                        .let { if (target in it) player.sendMessage(textComponent) }
+                        .let {
+                            if (target in it) {
+                                if (event.data.server != playerSource && textComponent is TranslatableComponent) {
+                                    val newStyle = textComponent.style().color(TextColor.GRAY)
+                                    val newText =
+                                        TranslatableComponent.builder(textComponent.key()).args(textComponent.args())
+                                            .style(newStyle).append(textComponent.children()).build()
+
+                                    player.sendMessage(newText)
+                                } else {
+                                    player.sendMessage(textComponent)
+                                }
+                            }
+                        }
                 }
             }
         }

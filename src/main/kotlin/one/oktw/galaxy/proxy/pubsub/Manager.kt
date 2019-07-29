@@ -44,35 +44,53 @@ class Manager(private val channel: Channel, private val exchange: String) {
         }
     }
 
-    private val queues: HashMap<String, String> = HashMap()
-    private val tags: HashMap<String, String> = HashMap()
-    private val mqOpts: HashMap<String, Any> = HashMap<String, Any>().apply { this["x-message-ttl"] = 0 }
+    private val queueAndTag: HashMap<String, Pair<String, String>> = HashMap()
     private val instanceId: UUID = UUID.randomUUID()
 
     init {
     }
 
+    fun reSubscribeAll() {
+        queueAndTag.entries.forEach { entry ->
+            try {
+                channel.queueUnbind(entry.value.first, "$exchange-${entry.key}", "")
+            } catch (err: Throwable) {
+                main.logger.error("Error while unbind old channel", err)
+            }
+
+            try {
+                channel.basicCancel(entry.value.second)
+            } catch (err: Throwable) {
+                main.logger.error("Error while unlisten old channel", err)
+            }
+
+            channel.exchangeDeclare("$exchange-${entry.key}", "fanout")
+            val queue = channel.queueDeclare().queue
+
+            channel.queueBind(queue, "$exchange-${entry.key}", "")
+
+            queueAndTag[entry.key] = queue to channel.basicConsume(queue, ConsumerWrapper(entry.key, this))
+        }
+    }
+
     fun subscribe(topic: String) {
-        if (queues[topic] != null) return
+        if (queueAndTag[topic] != null) return
 
         channel.exchangeDeclare("$exchange-$topic", "fanout")
         val queue = channel.queueDeclare().queue
 
         channel.queueBind(queue, "$exchange-$topic", "")
 
-        queues[topic] = queue
-        tags[topic] = channel.basicConsume(queue, ConsumerWrapper(topic, this))
+        queueAndTag[topic] = queue to channel.basicConsume(queue, ConsumerWrapper(topic, this))
     }
 
     fun unsubscribe(topic: String) {
-        if (queues[topic] == null) return
-        if (tags[topic] == null) return
+        if (queueAndTag[topic] == null) return
 
-        channel.queueUnbind(queues[topic], "$exchange-$topic", "")
-        channel.basicCancel(tags[topic])
+        channel.queueUnbind(queueAndTag[topic]!!.first, "$exchange-$topic", "")
+        channel.basicCancel(queueAndTag[topic]!!.second)
 
-        queues.remove(topic)
-        tags.remove(topic)
+        queueAndTag.remove(topic)
     }
 
     fun handleDelivery(topic: String, body: ByteArray) {
