@@ -47,32 +47,6 @@ class Manager(private val channel: Channel, private val exchange: String) {
     private val queueAndTag: HashMap<String, Pair<String, String>> = HashMap()
     private val instanceId: UUID = UUID.randomUUID()
 
-    init {
-    }
-
-    fun reSubscribeAll() {
-        queueAndTag.entries.forEach { entry ->
-            try {
-                channel.queueUnbind(entry.value.first, "$exchange-${entry.key}", "")
-            } catch (err: Throwable) {
-                main.logger.error("Error while unbind old channel", err)
-            }
-
-            try {
-                channel.basicCancel(entry.value.second)
-            } catch (err: Throwable) {
-                main.logger.error("Error while unlisten old channel", err)
-            }
-
-            channel.exchangeDeclare("$exchange-${entry.key}", "fanout")
-            val queue = channel.queueDeclare().queue
-
-            channel.queueBind(queue, "$exchange-${entry.key}", "")
-
-            queueAndTag[entry.key] = queue to channel.basicConsume(queue, ConsumerWrapper(entry.key, this))
-        }
-    }
-
     fun subscribe(topic: String) {
         if (queueAndTag[topic] != null) return
 

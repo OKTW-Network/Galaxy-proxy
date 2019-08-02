@@ -1,7 +1,10 @@
 package one.oktw.galaxy.proxy
 
 import com.google.inject.Inject
-import com.rabbitmq.client.*
+import com.rabbitmq.client.Channel
+import com.rabbitmq.client.Connection
+import com.rabbitmq.client.ConnectionFactory
+import com.rabbitmq.client.TopologyRecoveryException
 import com.rabbitmq.client.impl.DefaultExceptionHandler
 import com.uchuhimo.konf.Config
 import com.velocitypowered.api.event.Subscribe
@@ -13,11 +16,11 @@ import com.velocitypowered.api.proxy.server.RegisteredServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import io.fabric8.kubernetes.client.internal.readiness.Readiness
 import kotlinx.coroutines.*
-import one.oktw.galaxy.proxy.event.ChatExchange
 import one.oktw.galaxy.proxy.command.Lobby
 import one.oktw.galaxy.proxy.config.CoreSpec
 import one.oktw.galaxy.proxy.config.GalaxySpec
 import one.oktw.galaxy.proxy.config.GalaxySpec.Storage.storageClass
+import one.oktw.galaxy.proxy.event.ChatExchange
 import one.oktw.galaxy.proxy.event.GalaxyPacket
 import one.oktw.galaxy.proxy.event.PlayerListWatcher
 import one.oktw.galaxy.proxy.event.TabListUpdater
