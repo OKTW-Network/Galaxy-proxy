@@ -24,19 +24,19 @@ class Manager(exchange: String) : CoroutineScope by CoroutineScope(Dispatchers.D
     init {
         subscribeConnection.addListener(object : RedisPubSubListener<ByteArray, ByteArray> {
             override fun psubscribed(pattern: ByteArray, count: Long) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
 
             override fun punsubscribed(pattern: ByteArray, count: Long) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
 
             override fun unsubscribed(channel: ByteArray, count: Long) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
 
             override fun subscribed(channel: ByteArray, count: Long) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
 
             override fun message(channel: ByteArray, message: ByteArray) {
@@ -44,9 +44,8 @@ class Manager(exchange: String) : CoroutineScope by CoroutineScope(Dispatchers.D
             }
 
             override fun message(pattern: ByteArray, channel: ByteArray, message: ByteArray) {
-                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
-
         })
     }
 
