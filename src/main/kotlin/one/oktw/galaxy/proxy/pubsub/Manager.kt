@@ -91,6 +91,7 @@ class Manager(exchange: String) : CoroutineScope by CoroutineScope(Dispatchers.D
     }
 
     fun send(topic: String, item: Packet) {
+        main.proxy.eventManager.fireAndForget(MessageDeliveryEvent(topic, item))
         send(topic, ProxyAPI.encode(MessageWrapper(instanceId, item)))
     }
 
