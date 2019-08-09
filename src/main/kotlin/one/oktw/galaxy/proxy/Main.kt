@@ -1,11 +1,6 @@
 package one.oktw.galaxy.proxy
 
 import com.google.inject.Inject
-import com.rabbitmq.client.Channel
-import com.rabbitmq.client.Connection
-import com.rabbitmq.client.ConnectionFactory
-import com.rabbitmq.client.TopologyRecoveryException
-import com.rabbitmq.client.impl.DefaultExceptionHandler
 import com.uchuhimo.konf.Config
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
