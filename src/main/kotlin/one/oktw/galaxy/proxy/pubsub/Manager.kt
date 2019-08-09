@@ -3,8 +3,6 @@ package one.oktw.galaxy.proxy.pubsub
 import io.lettuce.core.RedisClient
 import io.lettuce.core.codec.ByteArrayCodec
 import io.lettuce.core.pubsub.RedisPubSubListener
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.Packet
@@ -14,7 +12,7 @@ import one.oktw.galaxy.proxy.pubsub.data.MessageWrapper
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class Manager(prefix: String) : CoroutineScope by CoroutineScope(Dispatchers.Default) {
+class Manager(prefix: String) {
     private val client = RedisClient.create(main.config[CoreSpec.redis])
     private val subscribeConnection = client.connectPubSub(ByteArrayCodec())
     private val publishConnection = client.connect(ByteArrayCodec())
