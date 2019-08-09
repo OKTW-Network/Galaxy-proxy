@@ -13,7 +13,7 @@ import one.oktw.galaxy.proxy.pubsub.data.MessageWrapper
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class Manager(private val exchange: String) : CoroutineScope by CoroutineScope(Dispatchers.Default) {
+class Manager(exchange: String) : CoroutineScope by CoroutineScope(Dispatchers.Default) {
     private val connection =
         io.lettuce.core.RedisClient.create(main.config[CoreSpec.redis]).connectPubSub(ByteArrayCodec())
     private val queries: ConcurrentHashMap<String, Boolean> = ConcurrentHashMap()
@@ -59,6 +59,7 @@ class Manager(private val exchange: String) : CoroutineScope by CoroutineScope(D
                 }
             }
         }
+
     private val String.asChannel
         get() = "$channelPrefix$this".toByteArray()
 
@@ -90,7 +91,7 @@ class Manager(private val exchange: String) : CoroutineScope by CoroutineScope(D
     }
 
     fun send(topic: String, item: Packet) {
-        send(topic, ProxyAPI.encode(item))
+        send(topic, ProxyAPI.encode(MessageWrapper(instanceId, item)))
     }
 
     fun send(topic: String, body: ByteArray) {
