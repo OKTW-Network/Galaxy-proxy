@@ -1,70 +1,77 @@
 package one.oktw.galaxy.proxy.pubsub
 
-import com.rabbitmq.client.*
+import io.lettuce.core.codec.ByteArrayCodec
+import io.lettuce.core.pubsub.RedisPubSubListener
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.Packet
+import one.oktw.galaxy.proxy.config.CoreSpec
 import one.oktw.galaxy.proxy.event.MessageDeliveryEvent
 import one.oktw.galaxy.proxy.pubsub.data.MessageWrapper
 import java.util.*
-import kotlin.collections.HashMap
+import java.util.concurrent.ConcurrentHashMap
 
-class Manager(private val channel: Channel, private val exchange: String) {
-    companion object {
-        class ConsumerWrapper(private val topic: String, private val manager: Manager) : Consumer {
-            override fun handleRecoverOk(consumerTag: String?) {
-                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun handleConsumeOk(consumerTag: String?) {
-                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun handleShutdownSignal(consumerTag: String?, sig: ShutdownSignalException?) {
-                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun handleCancel(consumerTag: String?) {
-                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun handleDelivery(
-                consumerTag: String,
-                envelope: Envelope,
-                properties: AMQP.BasicProperties,
-                body: ByteArray
-            ) {
-                manager.channel.basicAck(envelope.deliveryTag, false)
-                manager.handleDelivery(topic, body)
-            }
-
-            override fun handleCancelOk(consumerTag: String?) {
-                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-        }
-    }
-
-    private val queueAndTag: HashMap<String, Pair<String, String>> = HashMap()
+class Manager(private val exchange: String) : CoroutineScope by CoroutineScope(Dispatchers.Default) {
+    private val connection =
+        io.lettuce.core.RedisClient.create(main.config[CoreSpec.redis]).connectPubSub(ByteArrayCodec())
+    private val queries: ConcurrentHashMap<String, Boolean> = ConcurrentHashMap()
     private val instanceId: UUID = UUID.randomUUID()
 
+    init {
+        connection.addListener(object : RedisPubSubListener<ByteArray, ByteArray> {
+            override fun psubscribed(pattern: ByteArray, count: Long) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun punsubscribed(pattern: ByteArray, count: Long) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun unsubscribed(channel: ByteArray, count: Long) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun subscribed(channel: ByteArray, count: Long) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun message(channel: ByteArray, message: ByteArray) {
+                handleDelivery(channel.asTopic ?: return, message)
+            }
+
+            override fun message(pattern: ByteArray, channel: ByteArray, message: ByteArray) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+        })
+    }
+
+    private val channelPrefix = "pubsub-$exchange-"
+    private val ByteArray.asTopic
+        get(): String? {
+            return String(this).let {
+                if (it.startsWith(channelPrefix)) {
+                    it.drop(channelPrefix.length)
+                } else {
+                    null
+                }
+            }
+        }
+    private val String.asChannel
+        get() = "$channelPrefix$this".toByteArray()
+
     fun subscribe(topic: String) {
-        if (queueAndTag[topic] != null) return
-
-        channel.exchangeDeclare("$exchange-$topic", "fanout")
-        val queue = channel.queueDeclare().queue
-
-        channel.queueBind(queue, "$exchange-$topic", "")
-
-        queueAndTag[topic] = queue to channel.basicConsume(queue, ConsumerWrapper(topic, this))
+        if (queries.contains(topic)) return
+        queries[topic] = true
+        connection.sync().subscribe(topic.asChannel)
     }
 
     fun unsubscribe(topic: String) {
-        if (queueAndTag[topic] == null) return
-
-        channel.queueUnbind(queueAndTag[topic]!!.first, "$exchange-$topic", "")
-        channel.basicCancel(queueAndTag[topic]!!.second)
-
-        queueAndTag.remove(topic)
+        if (!queries.contains(topic)) return
+        connection.sync().unsubscribe(topic.asChannel)
+        queries.remove(topic)
     }
 
     fun handleDelivery(topic: String, body: ByteArray) {
@@ -83,13 +90,10 @@ class Manager(private val channel: Channel, private val exchange: String) {
     }
 
     fun send(topic: String, item: Packet) {
-        MessageDeliveryEvent(topic, item)
-            .let { main.proxy.eventManager.fireAndForget(it) }
-
-        send(topic, ProxyAPI.encode(MessageWrapper(instanceId, item)))
+        send(topic, ProxyAPI.encode(item))
     }
 
     fun send(topic: String, body: ByteArray) {
-        channel.basicPublish("$exchange-$topic", topic, null, body)
+        connection.async().publish(topic.asChannel, body)
     }
 }

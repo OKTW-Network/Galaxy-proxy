@@ -81,37 +81,7 @@ class Main {
             this.kubernetesClient = KubernetesClient()
             this.redisClient = RedisClient()
 
-            val factory = ConnectionFactory()
-            factory.host = config[CoreSpec.rabbitMqHost]
-            factory.port = config[CoreSpec.rabbitMqPort]
-            factory.username = config[CoreSpec.rabbitMqUsername]
-            factory.password = config[CoreSpec.rabbitMqPassword]
-            factory.isAutomaticRecoveryEnabled = true
-            factory.isTopologyRecoveryEnabled = true
-
-            factory.exceptionHandler =
-                object : DefaultExceptionHandler(),
-                    CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJob()) {
-                    override fun handleTopologyRecoveryException(
-                        conn: Connection?,
-                        ch: Channel?,
-                        exception: TopologyRecoveryException?
-                    ) {
-                        logger.error("Error while recovery", exception)
-                    }
-                }
-
-            val connection = factory.newConnection()
-            connection.addShutdownListener {
-                logger.error("conn killed", it)
-            }
-
-            val channel = connection.createChannel()
-            channel.addShutdownListener {
-                logger.error("channel killed", it)
-            }
-
-            manager = Manager(channel, config[CoreSpec.rabbitMqExchange])
+            manager = Manager(config[CoreSpec.rabbitMqExchange])
             manager.subscribe(MESSAGE_TOPIC)
 
             runBlocking {
