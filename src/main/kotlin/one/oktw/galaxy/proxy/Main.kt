@@ -76,7 +76,7 @@ class Main {
             this.kubernetesClient = KubernetesClient()
             this.redisClient = RedisClient()
 
-            manager = Manager(config[CoreSpec.rabbitMqExchange])
+            manager = Manager(config[CoreSpec.redisPubSubPrefix])
             manager.subscribe(MESSAGE_TOPIC)
 
             runBlocking {

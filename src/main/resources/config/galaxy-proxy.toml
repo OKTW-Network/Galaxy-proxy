@@ -4,15 +4,11 @@ protocolVersion = 498
 # Redis connection URI
 redis = ""
 
+# pub/sub
+redisPubSubPrefix = "galaxy"
+
 # Kubernetes API address
 kubernetes = "null"
-
-# rabbitMq
-rabbitMqHost = ""
-rabbitMqPort = 5672
-rabbitMqUsername = ""
-rabbitMqPassword = ""
-rabbitMqExchange = ""
 
 [galaxy]
 # Galaxy docker image

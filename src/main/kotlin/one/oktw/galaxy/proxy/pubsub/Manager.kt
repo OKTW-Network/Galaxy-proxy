@@ -14,7 +14,7 @@ import one.oktw.galaxy.proxy.pubsub.data.MessageWrapper
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class Manager(exchange: String) : CoroutineScope by CoroutineScope(Dispatchers.Default) {
+class Manager(prefix: String) : CoroutineScope by CoroutineScope(Dispatchers.Default) {
     private val client = RedisClient.create(main.config[CoreSpec.redis])
     private val subscribeConnection = client.connectPubSub(ByteArrayCodec())
     private val publishConnection = client.connect(ByteArrayCodec())
@@ -49,7 +49,7 @@ class Manager(exchange: String) : CoroutineScope by CoroutineScope(Dispatchers.D
         })
     }
 
-    private val channelPrefix = "pubsub-$exchange-"
+    private val channelPrefix = "$prefix-chat-"
     private val ByteArray.asTopic
         get(): String? {
             return String(this).let {
