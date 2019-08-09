@@ -1,5 +1,6 @@
 package one.oktw.galaxy.proxy.pubsub
 
+import io.lettuce.core.RedisClient
 import io.lettuce.core.codec.ByteArrayCodec
 import io.lettuce.core.pubsub.RedisPubSubListener
 import kotlinx.coroutines.CoroutineScope
@@ -14,13 +15,14 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class Manager(exchange: String) : CoroutineScope by CoroutineScope(Dispatchers.Default) {
-    private val connection =
-        io.lettuce.core.RedisClient.create(main.config[CoreSpec.redis]).connectPubSub(ByteArrayCodec())
+    private val client = RedisClient.create(main.config[CoreSpec.redis])
+    private val subscribeConnection = client.connectPubSub(ByteArrayCodec())
+    private val publishConnection = client.connect(ByteArrayCodec())
     private val queries: ConcurrentHashMap<String, Boolean> = ConcurrentHashMap()
     private val instanceId: UUID = UUID.randomUUID()
 
     init {
-        connection.addListener(object : RedisPubSubListener<ByteArray, ByteArray> {
+        subscribeConnection.addListener(object : RedisPubSubListener<ByteArray, ByteArray> {
             override fun psubscribed(pattern: ByteArray, count: Long) {
                 TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
@@ -66,12 +68,12 @@ class Manager(exchange: String) : CoroutineScope by CoroutineScope(Dispatchers.D
     fun subscribe(topic: String) {
         if (queries.contains(topic)) return
         queries[topic] = true
-        connection.sync().subscribe(topic.asChannel)
+        subscribeConnection.sync().subscribe(topic.asChannel)
     }
 
     fun unsubscribe(topic: String) {
         if (!queries.contains(topic)) return
-        connection.sync().unsubscribe(topic.asChannel)
+        subscribeConnection.sync().unsubscribe(topic.asChannel)
         queries.remove(topic)
     }
 
@@ -96,6 +98,6 @@ class Manager(exchange: String) : CoroutineScope by CoroutineScope(Dispatchers.D
     }
 
     fun send(topic: String, body: ByteArray) {
-        connection.async().publish(topic.asChannel, body)
+        publishConnection.async().publish(topic.asChannel, body)
     }
 }
