@@ -22,35 +22,33 @@ class Manager(prefix: String) {
     init {
         subscribeConnection.addListener(object : RedisPubSubAdapter<ByteArray, ByteArray>() {
             override fun message(channel: ByteArray, message: ByteArray) {
-                handleDelivery(channel.asTopic ?: return, message)
+                handleDelivery(channel.toTopic() ?: return, message)
             }
         })
     }
 
     private val channelPrefix = "$prefix-chat-"
-    private val ByteArray.asTopic
-        get(): String? {
-            return String(this).let {
-                if (it.startsWith(channelPrefix)) {
-                    it.drop(channelPrefix.length)
-                } else {
-                    null
-                }
+    private fun ByteArray.toTopic(): String? {
+        return String(this).let {
+            if (it.startsWith(channelPrefix)) {
+                it.drop(channelPrefix.length)
+            } else {
+                null
             }
         }
+    }
 
-    private val String.asChannel
-        get() = "$channelPrefix$this".toByteArray()
+    private fun String.toChannel() = "$channelPrefix$this".toByteArray()
 
     fun subscribe(topic: String) {
         if (queries.contains(topic)) return
         queries[topic] = true
-        subscribeConnection.sync().subscribe(topic.asChannel)
+        subscribeConnection.sync().subscribe(topic.toChannel())
     }
 
     fun unsubscribe(topic: String) {
         if (!queries.contains(topic)) return
-        subscribeConnection.sync().unsubscribe(topic.asChannel)
+        subscribeConnection.sync().unsubscribe(topic.toChannel())
         queries.remove(topic)
     }
 
@@ -75,6 +73,6 @@ class Manager(prefix: String) {
     }
 
     fun send(topic: String, body: ByteArray) {
-        publishConnection.async().publish(topic.asChannel, body)
+        publishConnection.async().publish(topic.toChannel(), body)
     }
 }
