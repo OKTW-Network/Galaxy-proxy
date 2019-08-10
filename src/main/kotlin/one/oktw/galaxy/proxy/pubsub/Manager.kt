@@ -2,7 +2,7 @@ package one.oktw.galaxy.proxy.pubsub
 
 import io.lettuce.core.RedisClient
 import io.lettuce.core.codec.ByteArrayCodec
-import io.lettuce.core.pubsub.RedisPubSubListener
+import io.lettuce.core.pubsub.RedisPubSubAdapter
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.Packet
@@ -20,29 +20,9 @@ class Manager(prefix: String) {
     private val instanceId: UUID = UUID.randomUUID()
 
     init {
-        subscribeConnection.addListener(object : RedisPubSubListener<ByteArray, ByteArray> {
-            override fun psubscribed(pattern: ByteArray, count: Long) {
-                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun punsubscribed(pattern: ByteArray, count: Long) {
-                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun unsubscribed(channel: ByteArray, count: Long) {
-                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
-            override fun subscribed(channel: ByteArray, count: Long) {
-                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-            }
-
+        subscribeConnection.addListener(object : RedisPubSubAdapter<ByteArray, ByteArray>() {
             override fun message(channel: ByteArray, message: ByteArray) {
                 handleDelivery(channel.asTopic ?: return, message)
-            }
-
-            override fun message(pattern: ByteArray, channel: ByteArray, message: ByteArray) {
-                // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
             }
         })
     }
