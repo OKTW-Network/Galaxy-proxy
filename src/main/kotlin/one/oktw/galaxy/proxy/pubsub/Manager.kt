@@ -57,8 +57,8 @@ class Manager(prefix: String) {
             ProxyAPI.decode<MessageWrapper>(body)
         } catch (err: Throwable) {
             main.logger.error("Decode MessageWrapper packet fail", err)
-            null
-        } ?: return
+            return
+        }
 
         // drop short circuited message
         if (unwrappedData.source == instanceId) return
