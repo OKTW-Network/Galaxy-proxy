@@ -1,11 +1,6 @@
 package one.oktw.galaxy.proxy
 
 import com.google.inject.Inject
-import com.rabbitmq.client.Channel
-import com.rabbitmq.client.Connection
-import com.rabbitmq.client.ConnectionFactory
-import com.rabbitmq.client.TopologyRecoveryException
-import com.rabbitmq.client.impl.DefaultExceptionHandler
 import com.uchuhimo.konf.Config
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
@@ -81,37 +76,7 @@ class Main {
             this.kubernetesClient = KubernetesClient()
             this.redisClient = RedisClient()
 
-            val factory = ConnectionFactory()
-            factory.host = config[CoreSpec.rabbitMqHost]
-            factory.port = config[CoreSpec.rabbitMqPort]
-            factory.username = config[CoreSpec.rabbitMqUsername]
-            factory.password = config[CoreSpec.rabbitMqPassword]
-            factory.isAutomaticRecoveryEnabled = true
-            factory.isTopologyRecoveryEnabled = true
-
-            factory.exceptionHandler =
-                object : DefaultExceptionHandler(),
-                    CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJob()) {
-                    override fun handleTopologyRecoveryException(
-                        conn: Connection?,
-                        ch: Channel?,
-                        exception: TopologyRecoveryException?
-                    ) {
-                        logger.error("Error while recovery", exception)
-                    }
-                }
-
-            val connection = factory.newConnection()
-            connection.addShutdownListener {
-                logger.error("conn killed", it)
-            }
-
-            val channel = connection.createChannel()
-            channel.addShutdownListener {
-                logger.error("channel killed", it)
-            }
-
-            manager = Manager(channel, config[CoreSpec.rabbitMqExchange])
+            manager = Manager(config[CoreSpec.redisPubSubPrefix])
             manager.subscribe(MESSAGE_TOPIC)
 
             runBlocking {
