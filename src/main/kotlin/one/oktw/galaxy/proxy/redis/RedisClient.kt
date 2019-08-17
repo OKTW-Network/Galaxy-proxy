@@ -6,9 +6,7 @@ import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.util.GameProfile
 import io.lettuce.core.RedisClient
 import io.lettuce.core.ScanArgs
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.withContext
 import one.oktw.galaxy.proxy.Main.Companion.main
 import java.util.*
 
@@ -21,20 +19,18 @@ class RedisClient {
     private val gson = Gson()
     private val client = RedisClient.create(main.config.redisConfig.URI).connect()
 
-    suspend fun version() = withContext(IO) {
-        client.async()
-            .info("server")
-            .await()
-            .split("\r\n")
-            .first { it.startsWith("redis_version") }
-    }
+    suspend fun version() = client.async()
+        .info("server")
+        .await()
+        .split("\r\n")
+        .first { it.startsWith("redis_version") }
 
     // Player
-    suspend fun addPlayers(players: List<Player>, ttl: Long = 180) = withContext(IO) {
+    suspend fun addPlayers(players: List<Player>, ttl: Long = 180) {
         players.forEach { addPlayer(it, ttl) }
     }
 
-    suspend fun addPlayer(player: Player, ttl: Long = 180) = withContext(IO) {
+    suspend fun addPlayer(player: Player, ttl: Long = 180) {
         client.async()
             .apply {
                 select(DB_PLAYERS)
@@ -52,51 +48,43 @@ class RedisClient {
                 hset(player.username, "latency", player.ping.toString()).await()
                 expire(player.username, ttl).await()
             }
-
-        Unit
     }
 
-    suspend fun delPlayer(name: String) = withContext(IO) {
+    suspend fun delPlayer(name: String) {
         client.async()
             .apply { select(DB_PLAYERS) }
             .del(name)
             .await()
-
-        Unit
     }
 
-    suspend fun getPlayerNumber(): Long = withContext(IO) {
-        client.async()
-            .apply { select(DB_PLAYERS) }
-            .dbsize()
+    suspend fun getPlayerNumber(): Long = client.async()
+        .apply { select(DB_PLAYERS) }
+        .dbsize()
+        .await()
+
+    suspend fun getPlayers(keyword: String = "", number: Long = 12) = client.async().run {
+        select(DB_PLAYERS)
+
+        scan(ScanArgs().limit(number).match("$keyword*"))
             .await()
-    }
+            .keys
+            .run {
+                if (isEmpty()) {
+                    emptyList()
+                } else {
+                    map {
+                        val data = hgetall(it).await()
 
-    suspend fun getPlayers(keyword: String = "", number: Long = 12) = withContext(IO) {
-        client.async().run {
-            select(DB_PLAYERS)
-
-            scan(ScanArgs().limit(number).match("$keyword*"))
-                .await()
-                .keys
-                .run {
-                    if (isEmpty()) {
-                        emptyList()
-                    } else {
-                        map {
-                            val data = hgetall(it).await()
-
-                            GameProfile(
-                                UUID.fromString(data["uuid"]),
-                                it,
-                                gson.fromJson(
-                                    data["properties"],
-                                    object : TypeToken<List<GameProfile.Property>>() {}.type
-                                )
-                            ) to data["latency"]!!.toLong()
-                        }
+                        GameProfile(
+                            UUID.fromString(data["uuid"]),
+                            it,
+                            gson.fromJson(
+                                data["properties"],
+                                object : TypeToken<List<GameProfile.Property>>() {}.type
+                            )
+                        ) to data["latency"]!!.toLong()
                     }
                 }
-        }
+            }
     }
 }
