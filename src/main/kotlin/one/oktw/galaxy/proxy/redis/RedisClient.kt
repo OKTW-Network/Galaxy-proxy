@@ -10,7 +10,6 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.withContext
 import one.oktw.galaxy.proxy.Main.Companion.main
-import one.oktw.galaxy.proxy.config.CoreSpec
 import java.util.*
 
 class RedisClient {
@@ -20,7 +19,7 @@ class RedisClient {
     }
 
     private val gson = Gson()
-    private val client = RedisClient.create(main.config[CoreSpec.redis]).connect()
+    private val client = RedisClient.create(main.config.redisConfig.URI).connect()
 
     suspend fun version() = withContext(IO) {
         client.async()

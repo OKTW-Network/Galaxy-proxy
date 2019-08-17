@@ -1,7 +1,6 @@
 package one.oktw.galaxy.proxy
 
 import com.google.inject.Inject
-import com.uchuhimo.konf.Config
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
@@ -10,11 +9,11 @@ import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.RegisteredServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import io.fabric8.kubernetes.client.internal.readiness.Readiness
-import kotlinx.coroutines.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import one.oktw.galaxy.proxy.command.Lobby
-import one.oktw.galaxy.proxy.config.CoreSpec
-import one.oktw.galaxy.proxy.config.GalaxySpec
-import one.oktw.galaxy.proxy.config.GalaxySpec.Storage.storageClass
+import one.oktw.galaxy.proxy.config.ConfigManager
 import one.oktw.galaxy.proxy.event.ChatExchange
 import one.oktw.galaxy.proxy.event.GalaxyPacket
 import one.oktw.galaxy.proxy.event.PlayerListWatcher
@@ -24,8 +23,6 @@ import one.oktw.galaxy.proxy.pubsub.Manager
 import one.oktw.galaxy.proxy.redis.RedisClient
 import org.slf4j.Logger
 import java.net.InetSocketAddress
-import java.nio.file.Files
-import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 @Plugin(id = "galaxy-proxy", name = "Galaxy proxy side plugin", version = "1.0-SNAPSHOT")
@@ -36,7 +33,7 @@ class Main {
             private set
     }
 
-    val config: Config
+    val config = ConfigManager()
 
     lateinit var lobby: RegisteredServer
         private set
@@ -51,19 +48,6 @@ class Main {
     lateinit var chatExchange: ChatExchange
         private set
 
-    init {
-        Files.createDirectories(Paths.get("config"))
-        if (!Files.exists(Paths.get("config", "galaxy-proxy.toml"))) {
-            this::class.java.getResourceAsStream("/config/galaxy-proxy.toml")
-                .copyTo(Files.newOutputStream(Paths.get("config", "galaxy-proxy.toml")))
-        }
-
-        this.config = Config { listOf(CoreSpec, GalaxySpec).forEach(::addSpec) }
-            .from.toml.url(this::class.java.getResource("/config/galaxy-proxy.toml"))
-            .from.toml.file("config/galaxy-proxy.toml")
-            .from.env()
-    }
-
     lateinit var manager: Manager
 
     @Inject
@@ -76,7 +60,7 @@ class Main {
             this.kubernetesClient = KubernetesClient()
             this.redisClient = RedisClient()
 
-            manager = Manager(config[CoreSpec.redisPubSubPrefix])
+            manager = Manager(config.redisConfig.URI, config.redisConfig.PubSubPrefix)
             manager.subscribe(MESSAGE_TOPIC)
 
             runBlocking {
@@ -101,14 +85,14 @@ class Main {
 
             proxy.channelRegistrar.register(GalaxyPacket.MESSAGE_CHANNEL_ID)
 
-            proxy.eventManager.register(this, PlayerListWatcher(config[CoreSpec.protocolVersion]))
+            proxy.eventManager.register(this, PlayerListWatcher(config.proxyConfig.ProtocolVersion))
             proxy.eventManager.register(this, TabListUpdater())
             proxy.eventManager.register(this, GalaxyPacket())
 
             // Start lobby TODO auto scale lobby
             GlobalScope.launch {
                 try {
-                    lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config[storageClass], "10Gi")
+                    lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config.galaxies["lobby"]!!)
                         .let { if (!Readiness.isReady(it)) kubernetesClient.waitReady(it) else it }
                         .let {
                             proxy.registerServer(

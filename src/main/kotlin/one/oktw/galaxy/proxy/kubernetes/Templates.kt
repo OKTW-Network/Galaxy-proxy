@@ -4,7 +4,7 @@ import com.fkorotkov.kubernetes.*
 import com.velocitypowered.api.proxy.config.ProxyConfig
 import io.fabric8.kubernetes.api.model.*
 import one.oktw.galaxy.proxy.Main.Companion.main
-import one.oktw.galaxy.proxy.config.GalaxySpec
+import one.oktw.galaxy.proxy.config.model.GalaxySpec
 import java.nio.charset.StandardCharsets
 import java.util.Arrays.asList
 
@@ -14,7 +14,6 @@ private fun ProxyConfig.getForwardingSecret(): ByteArray {
 }
 
 object Templates {
-    private val config = main.config
     private val forwardSecret by lazy {
         main.proxy.configuration.getForwardingSecret().toString(StandardCharsets.UTF_8)
     }
@@ -34,17 +33,19 @@ object Templates {
         }
     }
 
-    fun galaxy(name: String, pvc: String): Pod {
+    fun galaxy(name: String, spec: GalaxySpec): Pod {
+        if (spec.Storage == null) throw IllegalArgumentException("Storage spec undefined!")
+
         return newPod {
             metadata { this.name = name }
             spec {
-                imagePullSecrets = asList(LocalObjectReference(config[GalaxySpec.pullSecret]))
+                imagePullSecrets = asList(LocalObjectReference(spec.PullSecret))
                 securityContext { fsGroup = 1000 }
-                this.volumes = asList(newVolume { this.name = "minecraft"; persistentVolumeClaim { claimName = pvc } })
+                this.volumes = asList(newVolume { this.name = "minecraft"; persistentVolumeClaim { claimName = name } })
 
                 containers = asList(newContainer {
                     this.name = "minecraft"
-                    image = config[GalaxySpec.image]
+                    image = spec.Image
                     env = asList(EnvVar("FABRIC_PROXY_SECRET", forwardSecret, null))
 
                     ports = asList(newContainerPort {
@@ -76,12 +77,12 @@ object Templates {
 
                     resources {
                         requests = mapOf(
-                            Pair("cpu", Quantity(config[GalaxySpec.Resource.cpuRequire])),
-                            Pair("memory", Quantity(config[GalaxySpec.Resource.memoryRequire]))
+                            Pair("cpu", Quantity(spec.Resource.CPURequest)),
+                            Pair("memory", Quantity(spec.Resource.MemoryRequest))
                         )
                         limits = mapOf(
-                            Pair("cpu", Quantity(config[GalaxySpec.Resource.cpuLimit])),
-                            Pair("memory", Quantity(config[GalaxySpec.Resource.memoryLimit]))
+                            Pair("cpu", Quantity(spec.Resource.CPULimit)),
+                            Pair("memory", Quantity(spec.Resource.MemoryLimit))
                         )
                     }
                 })

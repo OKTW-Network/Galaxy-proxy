@@ -1,0 +1,4 @@
+{
+  "URI": "redis://localhost",
+  "PubSubPrefix": "galaxy"
+}
