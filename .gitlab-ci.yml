@@ -1,38 +1,52 @@
-image: docker:stable
+stages:
+  - build
+  - docker-build
 
-services:
-  - docker:dind
-
-variables:
-  DOCKER_HOST: tcp://docker:2375
-  DOCKER_DRIVER: overlay2
-
-before_script:
-  - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
-
-build-master:
+build:
   stage: build
+  image: adoptopenjdk/openjdk8:alpine-slim
+  cache:
+    paths:
+      - .gradle/wrapper
+      - .gradle/caches
+  before_script:
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+  script: "./gradlew --no-daemon build"
+  artifacts:
+    expire_in: 1 weeks
+    paths:
+      - build/libs/*
+
+.docker-init: &dockerInit
+  stage: docker-build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - cp build/libs/galaxy-proxy-1.0-SNAPSHOT.jar docker/plugins
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+
+docker-master:
+  <<: *dockerInit
   script:
-    - docker pull "$CI_REGISTRY_IMAGE" || true
-    - docker build --pull --cache-from "$CI_REGISTRY_IMAGE" -t "$CI_REGISTRY_IMAGE" .
+    - docker build --pull --cache-from "$CI_REGISTRY_IMAGE:latest" -t "$CI_REGISTRY_IMAGE" .
     - docker push "$CI_REGISTRY_IMAGE"
   only:
     - master
 
-build-tags:
-  stage: build
+docker-tags:
+  <<: *dockerInit
   script:
-    - docker pull "$CI_REGISTRY_IMAGE" || true
-    - docker build --pull --cache-from "$CI_REGISTRY_IMAGE" -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG" .
+    - docker build --pull --cache-from "$CI_REGISTRY_IMAGE::latest" -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG" .
     - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"
   only:
     - tags
 
-build-ref:
-  stage: build
+docker-ref:
+  <<: *dockerInit
   script:
-    - docker pull $CI_REGISTRY_IMAGE:latest || true
-    - docker build --pull --cache-from "$CI_REGISTRY_IMAGE" -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" .
+    - docker build --pull --cache-from "$CI_REGISTRY_IMAGE::latest" -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" .
     - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
   only:
     - branches
