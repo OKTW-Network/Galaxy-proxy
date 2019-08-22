@@ -46,7 +46,10 @@ object Templates {
                 containers = asList(newContainer {
                     this.name = "minecraft"
                     image = spec.Image
-                    env = asList(EnvVar("FABRIC_PROXY_SECRET", forwardSecret, null))
+                    env = asList(
+                        EnvVar("FABRIC_PROXY_SECRET", forwardSecret, null),
+                        EnvVar("resourcePack", spec.ResourcePack, null)
+                    )
 
                     ports = asList(newContainerPort {
                         this.name = "minecraft"
