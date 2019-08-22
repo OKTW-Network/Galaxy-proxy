@@ -61,7 +61,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
                                 return@launch
                             }
 
-                            // Send packet to server: Galaxy is starting
+                            // Send packet to server: Galaxy is started
                             ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Started))
                                 .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
                         }
@@ -86,7 +86,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
                             return@launch
                         }
 
-                        // Send packet to server: Galaxy is starting
+                        // Send packet to server: Galaxy is started
                         ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Started))
                             .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
                     }
