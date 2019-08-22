@@ -7,7 +7,7 @@ build:
   image: adoptopenjdk/openjdk8:alpine-slim
   cache:
     paths:
-      - .gradle/wapper
+      - .gradle/wrapper
       - .gradle/caches
   before_script:
     - export GRADLE_USER_HOME=`pwd`/.gradle
