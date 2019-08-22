@@ -1,6 +1,6 @@
 FROM adoptopenjdk/openjdk8:alpine-jre
-USER 1000
 RUN mkdir /app
+USER 1000
 WORKDIR /app
 
 COPY --chown=1000 docker /app
