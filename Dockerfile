@@ -1,5 +1,5 @@
 FROM adoptopenjdk/openjdk8:alpine-jre
-RUN mkdir /app
+RUN mkdir /app && chown 1000:100 /app
 USER 1000
 WORKDIR /app
 
