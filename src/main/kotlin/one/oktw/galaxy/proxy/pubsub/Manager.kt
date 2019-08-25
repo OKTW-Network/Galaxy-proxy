@@ -6,14 +6,13 @@ import io.lettuce.core.pubsub.RedisPubSubAdapter
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.Packet
-import one.oktw.galaxy.proxy.config.CoreSpec
 import one.oktw.galaxy.proxy.event.MessageDeliveryEvent
 import one.oktw.galaxy.proxy.pubsub.data.MessageWrapper
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class Manager(prefix: String) {
-    private val client = RedisClient.create(main.config[CoreSpec.redis])
+class Manager(redisURI: String, prefix: String) {
+    private val client = RedisClient.create(redisURI)
     private val subscribeConnection = client.connectPubSub(ByteArrayCodec())
     private val publishConnection = client.connect(ByteArrayCodec())
     private val queries: ConcurrentHashMap<String, Boolean> = ConcurrentHashMap()

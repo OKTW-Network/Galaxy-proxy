@@ -1,0 +1,15 @@
+{
+  "Image": "registry.gitlab.com/oktw-network/galaxy",
+  "PullSecret": "",
+  "Type": "GALAXY",
+  "Resource": {
+    "CPULimit": "4000m",
+    "CPURequest": "300m",
+    "MemoryLimit": "2Gi",
+    "MemoryRequest": "800Mi"
+  },
+  "Storage": {
+    "StorageClass": "",
+    "Size": "5Gi"
+  }
+}

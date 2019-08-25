@@ -1,0 +1,11 @@
+{
+  "Image": "registry.gitlab.com/oktw-network/galaxy",
+  "PullSecret": "",
+  "Type": "LOBBY",
+  "Resource": {
+    "CPULimit": "4000m",
+    "CPURequest": "300m",
+    "MemoryLimit": "2Gi",
+    "MemoryRequest": "800Mi"
+  }
+}

@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.*
-import one.oktw.galaxy.proxy.config.GalaxySpec.Storage
 import java.net.InetSocketAddress
 import java.util.*
 
@@ -62,7 +61,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
                                 return@launch
                             }
 
-                            // Send packet to server: Galaxy is starting
+                            // Send packet to server: Galaxy is started
                             ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Started))
                                 .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
                         }
@@ -72,9 +71,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
                             .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
 
                         // Start galaxy
-                        val config = main.config
-                        galaxy = kubernetes.getOrCreateVolume(id, config[Storage.storageClass], config[Storage.size])
-                            .let { main.kubernetesClient.createGalaxy(id, it) }
+                        galaxy = kubernetes.getOrCreateGalaxyAndVolume(id, main.config.galaxies["normal_galaxy"]!!) // TODO multi type
 
                         // Send packet to server: Galaxy is starting
                         ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Starting))
@@ -89,7 +86,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
                             return@launch
                         }
 
-                        // Send packet to server: Galaxy is starting
+                        // Send packet to server: Galaxy is started
                         ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Started))
                             .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
                     }
