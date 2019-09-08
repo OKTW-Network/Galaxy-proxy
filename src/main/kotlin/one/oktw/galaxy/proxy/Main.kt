@@ -2,6 +2,7 @@ package one.oktw.galaxy.proxy
 
 import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
+import com.velocitypowered.api.event.player.KickedFromServerEvent
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.Plugin
@@ -12,6 +13,7 @@ import io.fabric8.kubernetes.client.internal.readiness.Readiness
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import net.kyori.text.TextComponent
 import one.oktw.galaxy.proxy.command.Lobby
 import one.oktw.galaxy.proxy.config.ConfigManager
 import one.oktw.galaxy.proxy.event.ChatExchange
@@ -112,6 +114,13 @@ class Main {
                 if (it.player.currentServer.isPresent || !this::lobby.isInitialized) return@register // Ignore exist player
 
                 it.result = ServerPreConnectEvent.ServerResult.allowed(lobby)
+            }
+
+            // Connect back to lobby on disconnect from galaxies
+            proxy.eventManager.register(this, KickedFromServerEvent::class.java) {
+                if (it.server == lobby || !this::lobby.isInitialized || it.kickedDuringServerConnect()) return@register // Ignore exist player
+
+                it.result = KickedFromServerEvent.RedirectPlayer.create(lobby, TextComponent.empty())
             }
 
             chatExchange = ChatExchange(MESSAGE_TOPIC)
