@@ -6,7 +6,6 @@ import io.fabric8.kubernetes.api.model.*
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.config.model.GalaxySpec
 import java.nio.charset.StandardCharsets
-import java.util.Arrays.asList
 
 // Velocity config hack
 private fun ProxyConfig.getForwardingSecret(): ByteArray {
@@ -78,15 +77,17 @@ object Templates {
                         exec { command = listOf("control", "ping") }
                     }
 
-                    resources {
-                        requests = mapOf(
-                            Pair("cpu", Quantity(spec.Resource.CPURequest)),
-                            Pair("memory", Quantity(spec.Resource.MemoryRequest))
-                        )
-                        limits = mapOf(
-                            Pair("cpu", Quantity(spec.Resource.CPULimit)),
-                            Pair("memory", Quantity(spec.Resource.MemoryLimit))
-                        )
+                    if (spec.Resource != null) {
+                        resources {
+                            requests = listOfNotNull(
+                                spec.Resource.CPURequest?.let { Pair("cpu", Quantity(it)) },
+                                spec.Resource.MemoryRequest?.let { Pair("memory", Quantity(it)) }
+                            ).toMap()
+                            limits = listOfNotNull(
+                                spec.Resource.CPULimit?.let { Pair("cpu", Quantity(it)) },
+                                spec.Resource.MemoryLimit?.let { Pair("memory", Quantity(it)) }
+                            ).toMap()
+                        }
                     }
                 })
             }
