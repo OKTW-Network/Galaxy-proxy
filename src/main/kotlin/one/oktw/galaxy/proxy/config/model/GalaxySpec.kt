@@ -4,6 +4,7 @@ data class GalaxySpec(
     val Image: String,
     val PullSecret: String,
     val Type: GalaxyType,
+    val ResourcePack: String,
     val Resource: GalaxyResource,
     val Storage: GalaxyStorage? = null
 ) {
