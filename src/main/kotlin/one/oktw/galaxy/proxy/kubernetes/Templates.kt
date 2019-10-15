@@ -6,7 +6,6 @@ import io.fabric8.kubernetes.api.model.*
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.config.model.GalaxySpec
 import java.nio.charset.StandardCharsets
-import java.util.Arrays.asList
 
 // Velocity config hack
 private fun ProxyConfig.getForwardingSecret(): ByteArray {
@@ -25,7 +24,7 @@ object Templates {
 
         spec {
             storageClassName = storageClass
-            accessModes = asList("ReadWriteOnce")
+            accessModes = listOf("ReadWriteOnce")
 
             resources {
                 this.requests = mapOf(Pair("storage", Quantity(size)))
@@ -34,40 +33,40 @@ object Templates {
     }
 
     fun galaxy(name: String, spec: GalaxySpec): Pod {
-        if (spec.Storage == null) throw IllegalArgumentException("Storage spec undefined!")
+        requireNotNull(spec.Storage) { "Storage spec undefined!" }
 
         return newPod {
             metadata { this.name = name }
             spec {
-                imagePullSecrets = asList(LocalObjectReference(spec.PullSecret))
+                imagePullSecrets = listOf(LocalObjectReference(spec.PullSecret))
                 securityContext { fsGroup = 1000 }
-                this.volumes = asList(newVolume { this.name = "minecraft"; persistentVolumeClaim { claimName = name } })
+                this.volumes = listOf(newVolume { this.name = "minecraft"; persistentVolumeClaim { claimName = name } })
 
-                containers = asList(newContainer {
+                containers = listOf(newContainer {
                     this.name = "minecraft"
                     image = spec.Image
-                    env = asList(
+                    env = listOf(
                         EnvVar("FABRIC_PROXY_SECRET", forwardSecret, null),
                         EnvVar("resourcePack", spec.ResourcePack, null)
                     )
 
-                    ports = asList(newContainerPort {
+                    ports = listOf(newContainerPort {
                         this.name = "minecraft"
                         containerPort = 25565
                         protocol = "TCP"
                     })
 
-                    volumeMounts = asList(
+                    volumeMounts = listOf(
                         newVolumeMount { this.name = "minecraft";subPath = "world";mountPath = "/app/minecraft/world" }
                     )
 
-                    lifecycle { preStop { exec { command = asList("control", "stop") } } }
+                    lifecycle { preStop { exec { command = listOf("control", "stop") } } }
                     readinessProbe {
                         initialDelaySeconds = 30
                         periodSeconds = 15
                         timeoutSeconds = 1
                         successThreshold = 1
-                        exec { command = asList("control", "ping") }
+                        exec { command = listOf("control", "ping") }
                     }
                     livenessProbe {
                         initialDelaySeconds = 30
@@ -75,18 +74,20 @@ object Templates {
                         timeoutSeconds = 10
                         successThreshold = 1
                         failureThreshold = 3
-                        exec { command = asList("control", "ping") }
+                        exec { command = listOf("control", "ping") }
                     }
 
-                    resources {
-                        requests = mapOf(
-                            Pair("cpu", Quantity(spec.Resource.CPURequest)),
-                            Pair("memory", Quantity(spec.Resource.MemoryRequest))
-                        )
-                        limits = mapOf(
-                            Pair("cpu", Quantity(spec.Resource.CPULimit)),
-                            Pair("memory", Quantity(spec.Resource.MemoryLimit))
-                        )
+                    if (spec.Resource != null) {
+                        resources {
+                            requests = listOfNotNull(
+                                spec.Resource.CPURequest?.let { Pair("cpu", Quantity(it)) },
+                                spec.Resource.MemoryRequest?.let { Pair("memory", Quantity(it)) }
+                            ).toMap()
+                            limits = listOfNotNull(
+                                spec.Resource.CPULimit?.let { Pair("cpu", Quantity(it)) },
+                                spec.Resource.MemoryLimit?.let { Pair("memory", Quantity(it)) }
+                            ).toMap()
+                        }
                     }
                 })
             }
