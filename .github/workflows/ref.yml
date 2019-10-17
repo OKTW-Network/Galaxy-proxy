@@ -36,8 +36,7 @@ jobs:
 
       - name: Build the Docker image and Publish to Registry
         run: |
-          REF_SLUG="$(echo $GITHUB_REF | sed -E 's|refs/[a-zA-Z]+/||')"
           docker login docker.pkg.github.com -u "OKTW-Network" -p "${{ secrets.OKTW_PACKAGE }}"
-          docker build . --file Dockerfile --tag galaxy-proxy:$REF_SLUG
-          docker tag galaxy-proxy:$REF_SLUG docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:$REF_SLUG
-          docker push docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:$REF_SLUG
+          docker build . --file Dockerfile --tag galaxy-proxy:"${{ github.ref }}"
+          docker tag galaxy-proxy:$REF_SLUG docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:"${{ github.ref }}"
+          docker push docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:"${{ github.ref }}"
