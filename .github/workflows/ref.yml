@@ -5,7 +5,6 @@ on:
     branches-ignore:
       - master
   pull_request:
-    types: opened
 
 jobs:
   build:
@@ -36,7 +35,8 @@ jobs:
 
       - name: Build the Docker image and Publish to Registry
         run: |
+          REF_SLUG="$(echo $GITHUB_REF | sed -E 's/refs\/heads\/|\/[a-z]+//g')"
           docker login docker.pkg.github.com -u "OKTW-Network" -p "${{ secrets.OKTW_PACKAGE }}"
-          docker build . --file Dockerfile --tag galaxy-proxy:"${{ github.ref }}"
-          docker tag galaxy-proxy:$REF_SLUG docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:"${{ github.ref }}"
-          docker push docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:"${{ github.ref }}"
+          docker build . --file Dockerfile --tag galaxy-proxy:$REF_SLUG
+          docker tag galaxy-proxy:$REF_SLUG docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:$REF_SLUG
+          docker push docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:$REF_SLUG
