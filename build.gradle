@@ -13,14 +13,14 @@ repositories {
     maven { url "https://kotlin.bintray.com/kotlinx" }
     maven {
         name 'velocity'
-        url 'https://repo.velocitypowered.com/releases/'
+        url 'https://repo.velocitypowered.com/snapshots/'
     }
 }
 
 dependencies {
-    kapt 'com.velocitypowered:velocity-api:1.0.3'
+    kapt 'com.velocitypowered:velocity-api:1.1.0-SNAPSHOT'
     implementation project(':api')
-    implementation 'com.velocitypowered:velocity-api:1.0.3'
+    implementation 'com.velocitypowered:velocity-api:1.1.0-SNAPSHOT'
     implementation 'io.fabric8:kubernetes-client:4.6.0'
     implementation 'com.fkorotkov:kubernetes-dsl:2.3'
     implementation 'io.lettuce:lettuce-core:5.2.0.RELEASE'
