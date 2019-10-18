@@ -15,6 +15,10 @@ repositories {
         name 'velocity'
         url 'https://repo.velocitypowered.com/snapshots/'
     }
+    maven {
+        name = 'sponge'
+        url = 'https://repo.spongepowered.org/maven'
+    }
 }
 
 dependencies {
