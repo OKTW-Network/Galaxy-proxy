@@ -6,7 +6,7 @@ WORKDIR /app
 COPY --chown=1000 docker /app
 
 # Download Velocity
-ADD --chown=1000 https://ci.velocitypowered.com/job/velocity-1.1.0/65/artifact/proxy/build/libs/velocity-proxy-1.1.0-SNAPSHOT-all.jar /app/velocity.jar
+ADD --chown=1000 https://ci.velocitypowered.com/job/velocity-1.1.0/66/artifact/proxy/build/libs/velocity-proxy-1.1.0-SNAPSHOT-all.jar /app/velocity.jar
 
 # Run Server
 EXPOSE 25565
