@@ -38,5 +38,4 @@ jobs:
           REF_SLUG="$(echo ${{ github.ref }} | sed -E 's/refs\/[a-z]+\/|\/[a-z]+//g')"
           docker login docker.pkg.github.com -u "OKTW-Network" -p "${{ secrets.OKTW_PACKAGE }}"
           docker build -t docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:$REF_SLUG .
-          docker tag galaxy-proxy:$REF_SLUG docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:$REF_SLUG
           docker push docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:$REF_SLUG

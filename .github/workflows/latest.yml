@@ -36,5 +36,4 @@ jobs:
         run: |
           docker login docker.pkg.github.com -u "OKTW-Network" -p "${{ secrets.OKTW_PACKAGE }}"
           docker build -t docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:latest .
-          docker tag galaxy-proxy docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:latest
           docker push docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:latest
