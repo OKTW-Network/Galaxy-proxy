@@ -28,7 +28,7 @@ tasks.withType<KotlinCompile> {
 }
 
 val shadowJar by tasks.getting(ShadowJar::class) {
-    classifier = "all"
+    archiveClassifier.set("all")
     configurations = listOf(project.configurations.shadow.get())
     exclude("META-INF")
     minimize()
@@ -48,7 +48,6 @@ publishing {
         create<MavenPublication>("api") {
             from(components["java"])
             artifact(sourcesJar)
-            artifact(shadowJar)
         }
     }
 }
