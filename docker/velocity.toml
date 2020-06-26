@@ -30,7 +30,7 @@ forwarding-secret = "5up3r53cr3t"
 
 # Announce whether or not your server supports Forge. If you run a modded server, we
 # suggest turning this on.
-announce-forge = true
+announce-forge = false
 
 [servers]
 # Configure your servers here. Each key represents the server's name, and the value
@@ -81,3 +81,6 @@ map = "Velocity"
 
 # Whether plugins should be shown in query response by default or not
 show-plugins = false
+
+[metrics]
+enabled = false

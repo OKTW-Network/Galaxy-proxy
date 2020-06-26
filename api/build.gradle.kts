@@ -17,10 +17,10 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("org.mongodb", "bson", "3.12.0")
+    implementation("org.mongodb", "bson", "4.0.4")
 
     shadow(kotlin("stdlib-jdk8"))
-    shadow("org.mongodb", "bson", "3.12.0")
+    shadow("org.mongodb", "bson", "4.0.4")
 }
 
 tasks.withType<KotlinCompile> {
@@ -28,7 +28,7 @@ tasks.withType<KotlinCompile> {
 }
 
 val shadowJar by tasks.getting(ShadowJar::class) {
-    classifier = "all"
+    archiveClassifier.set("all")
     configurations = listOf(project.configurations.shadow.get())
     exclude("META-INF")
     minimize()
@@ -48,7 +48,6 @@ publishing {
         create<MavenPublication>("api") {
             from(components["java"])
             artifact(sourcesJar)
-            artifact(shadowJar)
         }
     }
 }

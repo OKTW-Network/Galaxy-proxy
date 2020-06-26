@@ -2,6 +2,7 @@ package one.oktw.galaxy.proxy.api
 
 import org.bson.BsonBinaryReader
 import org.bson.BsonBinaryWriter
+import org.bson.UuidRepresentation
 import org.bson.codecs.*
 import org.bson.codecs.configuration.CodecRegistries
 import org.bson.codecs.configuration.CodecRegistry
@@ -18,6 +19,7 @@ object ProxyAPI {
     val globalChatChannel: UUID = UUID.fromString("00000000-0000-0000-0000-000000000001")
 
     val codecRegistries: CodecRegistry = CodecRegistries.fromProviders(
+        UuidCodecProvider(UuidRepresentation.STANDARD),
         ValueCodecProvider(),
         BsonValueCodecProvider(),
         DocumentCodecProvider(),
