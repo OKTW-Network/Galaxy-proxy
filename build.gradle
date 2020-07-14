@@ -29,7 +29,7 @@ dependencies {
     kapt 'com.velocitypowered:velocity-api:1.1.0-SNAPSHOT'
     implementation project(':api')
     implementation 'com.velocitypowered:velocity-api:1.1.0-SNAPSHOT'
-    implementation 'io.fabric8:kubernetes-client:4.10.2'
+    implementation 'io.fabric8:kubernetes-client:4.10.3'
     implementation 'com.fkorotkov:kubernetes-dsl:2.8'
     implementation 'io.lettuce:lettuce-core:5.3.1.RELEASE'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
