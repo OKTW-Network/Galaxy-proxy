@@ -17,11 +17,12 @@ class RedisClient {
     }
 
     private val gson = Gson()
-    private val client = RedisClient.create(main.config.redisConfig.URI).connect()
+    private val client = RedisClient.create(main.config.redisConfig.URI)
+    private val playersDB = client.connect().async().apply { select(DB_PLAYERS) }
+    private val galaxyDB = client.connect().async().apply { select(DB_GALAXY) }
 
-    suspend fun version() = client.async()
+    fun version() = client.connect().sync()
         .info("server")
-        .await()
         .split("\r\n")
         .first { it.startsWith("redis_version") }
 
@@ -31,40 +32,28 @@ class RedisClient {
     }
 
     suspend fun addPlayer(player: Player, ttl: Long = 180) {
-        client.async()
-            .apply {
-                select(DB_PLAYERS)
-                if (exists(player.username).await() == 0L) {
-                    hmset(
-                        player.username,
-                        mapOf(
-                            Pair("uuid", player.uniqueId.toString()),
-                            Pair("latency", player.ping.toString()),
-                            Pair("properties", gson.toJson(player.gameProfileProperties))
-                        )
-                    ).await()
-                }
-
-                hset(player.username, "latency", player.ping.toString()).await()
-                expire(player.username, ttl).await()
+        playersDB.apply {
+            if (exists(player.username).await() == 0L) {
+                hmset(
+                    player.username,
+                    mapOf(
+                        Pair("uuid", player.uniqueId.toString()),
+                        Pair("latency", player.ping.toString()),
+                        Pair("properties", gson.toJson(player.gameProfileProperties))
+                    )
+                ).await()
             }
+
+            hset(player.username, "latency", player.ping.toString()).await()
+            expire(player.username, ttl).await()
+        }
     }
 
-    suspend fun delPlayer(name: String) {
-        client.async()
-            .apply { select(DB_PLAYERS) }
-            .del(name)
-            .await()
-    }
+    suspend fun delPlayer(name: String) = playersDB.del(name).await()
 
-    suspend fun getPlayerNumber(): Long = client.async()
-        .apply { select(DB_PLAYERS) }
-        .dbsize()
-        .await()
+    suspend fun getPlayerNumber(): Long = playersDB.dbsize().await()
 
-    suspend fun getPlayers(keyword: String = "", number: Long = 12) = client.async().run {
-        select(DB_PLAYERS)
-
+    suspend fun getPlayers(keyword: String = "", number: Long = 12) = playersDB.run {
         scan(ScanArgs().limit(number).match("$keyword*"))
             .await()
             .keys
