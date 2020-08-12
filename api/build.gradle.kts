@@ -17,10 +17,10 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("org.mongodb", "bson", "4.0.4")
+    implementation("org.mongodb", "bson", "4.1.0")
 
     shadow(kotlin("stdlib-jdk8"))
-    shadow("org.mongodb", "bson", "4.0.4")
+    shadow("org.mongodb", "bson", "4.1.0")
 }
 
 tasks.withType<KotlinCompile> {
