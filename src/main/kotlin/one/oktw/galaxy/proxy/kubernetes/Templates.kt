@@ -47,7 +47,8 @@ object Templates {
                     image = spec.Image
                     env = listOf(
                         EnvVar("FABRIC_PROXY_SECRET", forwardSecret, null),
-                        EnvVar("resourcePack", spec.ResourcePack, null)
+                        EnvVar("resourcePack", spec.ResourcePack, null),
+                        EnvVar("GALAXY_ID", name, null)
                     )
 
                     ports = listOf(newContainerPort {
