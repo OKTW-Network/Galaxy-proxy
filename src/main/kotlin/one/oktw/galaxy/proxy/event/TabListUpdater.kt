@@ -7,18 +7,18 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.proxy.player.TabListEntry
 import com.velocitypowered.api.util.GameProfile
 import kotlinx.coroutines.*
-import net.kyori.text.TextComponent
-import net.kyori.text.format.TextColor
+import net.kyori.adventure.text.TextComponent
+import net.kyori.adventure.text.format.NamedTextColor
 import one.oktw.galaxy.proxy.Main.Companion.main
 import java.util.concurrent.TimeUnit
 
 class TabListUpdater : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJob()) {
     private val tabHeader = TextComponent.builder()
-        .append("OKTW", TextColor.DARK_PURPLE).append(" ")
-        .append("Galaxy", TextColor.YELLOW).append(" ")
-        .append("2.0", TextColor.RED).append(" ")
-        .append("Lite", TextColor.GREEN).append(" ")
-        .append("Beta", TextColor.AQUA)
+        .append("OKTW", NamedTextColor.DARK_PURPLE).append(" ")
+        .append("Galaxy", NamedTextColor.YELLOW).append(" ")
+        .append("2.0", NamedTextColor.RED).append(" ")
+        .append("Lite", NamedTextColor.GREEN).append(" ")
+        .append("Beta", NamedTextColor.AQUA)
         .build()
     private var tabFooter: TextComponent = TextComponent.of("")
     private var playerListCache: List<Pair<GameProfile, Long>> = emptyList()
@@ -53,8 +53,8 @@ class TabListUpdater : CoroutineScope by CoroutineScope(Dispatchers.Default + Su
 
     private suspend fun update() {
         tabFooter = TextComponent.builder()
-            .append("Online Player: ", TextColor.BLUE)
-            .append(main.redisClient.getPlayerNumber().toString(), TextColor.GREEN)
+            .append("Online Player: ", NamedTextColor.BLUE)
+            .append(main.redisClient.getPlayerNumber().toString(), NamedTextColor.GREEN)
             .build()
         playerListCache = main.redisClient.getPlayers(number = 100).sortedBy { it.first.name }
 
