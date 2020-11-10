@@ -45,6 +45,7 @@ object Templates {
                 containers = listOf(newContainer {
                     this.name = "minecraft"
                     image = spec.Image
+                    imagePullPolicy = "Always"
                     env = listOf(
                         EnvVar("FABRIC_PROXY_SECRET", forwardSecret, null),
                         EnvVar("resourcePack", spec.ResourcePack, null),
