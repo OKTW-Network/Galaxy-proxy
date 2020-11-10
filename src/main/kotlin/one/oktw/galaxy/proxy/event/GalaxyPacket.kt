@@ -93,7 +93,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
 
                     // Send player to galaxy TODO only create not join
                     main.proxy.run {
-                        val address = InetSocketAddress(galaxy.status.podIP, 25565)
+                        val address = InetSocketAddress(galaxy!!.status.podIP, 25565)
                         var server = getServer(id).orElseGet { registerServer(ServerInfo(id, address)) }
 
                         if (server.serverInfo.address != address) {

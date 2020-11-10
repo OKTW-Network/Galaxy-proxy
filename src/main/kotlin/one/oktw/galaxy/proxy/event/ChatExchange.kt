@@ -7,9 +7,11 @@ import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import net.kyori.text.TranslatableComponent
-import net.kyori.text.format.TextColor
-import net.kyori.text.serializer.gson.GsonComponentSerializer
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TranslatableComponent
+import net.kyori.adventure.text.format.NamedTextColor
+import net.kyori.adventure.text.format.Style
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.MessageSend
@@ -113,7 +115,7 @@ class ChatExchange(private val topic: String) {
         if (event.topic != topic) return
 
         if (event.data is ChatData) {
-            val textComponent = GsonComponentSerializer.INSTANCE.deserialize(event.data.packet.message)
+            val textComponent = GsonComponentSerializer.gson().deserialize(event.data.packet.message)
 
             main.proxy.allPlayers.forEach { player ->
                 val playerSource = player.currentServer.orElse(null)?.let {
@@ -129,10 +131,11 @@ class ChatExchange(private val topic: String) {
                         .let {
                             if (target in it) {
                                 if (event.data.server != playerSource && textComponent is TranslatableComponent) {
-                                    val newStyle = textComponent.style().color(TextColor.GRAY)
-                                    val newText =
-                                        TranslatableComponent.builder(textComponent.key()).args(textComponent.args())
-                                            .style(newStyle).append(textComponent.children()).build()
+                                    val newText = Component.translatable().key(textComponent.key())
+                                        .args(textComponent.args())
+                                        .style(Style.style().color(NamedTextColor.GRAY).build())
+                                        .append(textComponent.children())
+                                        .build()
 
                                     player.sendMessage(newText)
                                 } else {

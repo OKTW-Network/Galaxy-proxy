@@ -7,20 +7,19 @@ import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.proxy.player.TabListEntry
 import com.velocitypowered.api.util.GameProfile
 import kotlinx.coroutines.*
-import net.kyori.text.TextComponent
-import net.kyori.text.format.TextColor
+import net.kyori.adventure.text.Component.empty
+import net.kyori.adventure.text.Component.text
+import net.kyori.adventure.text.format.NamedTextColor
 import one.oktw.galaxy.proxy.Main.Companion.main
 import java.util.concurrent.TimeUnit
 
 class TabListUpdater : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJob()) {
-    private val tabHeader = TextComponent.builder()
-        .append("OKTW", TextColor.DARK_PURPLE).append(" ")
-        .append("Galaxy", TextColor.YELLOW).append(" ")
-        .append("2.0", TextColor.RED).append(" ")
-        .append("Lite", TextColor.GREEN).append(" ")
-        .append("Beta", TextColor.AQUA)
-        .build()
-    private var tabFooter: TextComponent = TextComponent.of("")
+    private val tabHeader = text("OKTW", NamedTextColor.DARK_PURPLE).append(text(" "))
+        .append(text("Galaxy", NamedTextColor.YELLOW)).append(text(" "))
+        .append(text("2.0", NamedTextColor.RED)).append(text(" "))
+        .append(text("Lite", NamedTextColor.GREEN)).append(text(" "))
+        .append(text("Beta", NamedTextColor.AQUA))
+    private var tabFooter = empty()
     private var playerListCache: List<Pair<GameProfile, Long>> = emptyList()
     private var updateTabList = true
 
@@ -52,10 +51,8 @@ class TabListUpdater : CoroutineScope by CoroutineScope(Dispatchers.Default + Su
     }
 
     private suspend fun update() {
-        tabFooter = TextComponent.builder()
-            .append("Online Player: ", TextColor.BLUE)
-            .append(main.redisClient.getPlayerNumber().toString(), TextColor.GREEN)
-            .build()
+        tabFooter = text("Online Player: ", NamedTextColor.BLUE)
+            .append(text(main.redisClient.getPlayerNumber().toString(), NamedTextColor.GREEN))
         playerListCache = main.redisClient.getPlayers(number = 100).sortedBy { it.first.name }
 
         main.proxy.allPlayers.forEach { player ->
