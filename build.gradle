@@ -1,7 +1,7 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.4.0'
-    id "org.jetbrains.kotlin.kapt" version "1.4.0"
-    id 'com.github.johnrengelman.shadow' version '6.0.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.4.10'
+    id "org.jetbrains.kotlin.kapt" version "1.4.10"
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
 }
 
 group 'one.oktw'
@@ -11,6 +11,7 @@ repositories {
     mavenCentral()
     jcenter()
     maven { url "https://kotlin.bintray.com/kotlinx" }
+    maven { url = "https://jitpack.io" }
     maven {
         name 'velocity'
         url 'https://repo.velocitypowered.com/snapshots/'
@@ -27,15 +28,11 @@ repositories {
 
 dependencies {
     kapt 'com.velocitypowered:velocity-api:1.1.0-SNAPSHOT'
-    implementation project(':api')
-    implementation 'com.velocitypowered:velocity-api:1.1.0-SNAPSHOT'
-    implementation 'io.fabric8:kubernetes-client:4.10.3'
+    compileOnly 'com.velocitypowered:velocity-api:1.1.0-SNAPSHOT'
+    implementation 'io.fabric8:kubernetes-client:4.11.1'
     implementation 'com.fkorotkov:kubernetes-dsl:2.8.1'
-    implementation 'io.lettuce:lettuce-core:5.3.3.RELEASE'
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation 'org.jetbrains.kotlin:kotlin-reflect'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.9'
-    implementation 'org.mongodb:bson:4.1.0'
+    implementation 'io.lettuce:lettuce-core:5.3.4.RELEASE'
+    implementation 'one.oktw:galaxy-lib:9f1f46b7'
 }
 
 compileKotlin {
@@ -52,52 +49,7 @@ tasks.withType(AbstractArchiveTask) {
 
 shadowJar {
     zip64 true
-    classifier = null
-//    exclude "META-INF/**"
-//    exclude "**/*.kotlin_metadata"
-//    include "META-INF/services/*"
-
-    // exclude velocity dependencies
-    dependencies {
-        include dependency(":api")
-        include dependency("org.mongodb:")
-        include dependency("io.fabric8:")
-        include dependency("org.jetbrains.kotlin:")
-        include dependency("org.jetbrains.kotlinx:")
-        include dependency("org.apache.commons:")
-        include dependency("org.yaml:")
-        include dependency("com.fasterxml.jackson.core:")
-        include dependency("com.fasterxml.jackson.module:")
-        include dependency("com.fasterxml.jackson.dataformat:")
-        include dependency("com.fasterxml.jackson.datatype:")
-        include dependency("com.fkorotkov:")
-        include dependency("com.squareup.okhttp3:")
-        include dependency("com.squareup.okio:")
-        include dependency("javax.validation:")
-        include dependency("io.lettuce:")
-        include dependency("io.projectreactor:")
-        include dependency("io.netty:")
-        include dependency("org.reactivestreams:")
-    }
-
-//    relocate "kotlin", "one.oktw.relocate.kotlin"
-//    relocate "kotlinx", "one.oktw.relocate.kotlinx"
-//    relocate "org.bson", "one.oktw.relocate.bson"
-//    relocate "org.jetbrains", "one.oktw.relocate.org.jetbrains"
-//    relocate "org.joda", "one.oktw.relocate.org.joda"
-//    relocate "org.apache", "one.oktw.relocate.org.apache"
-//    relocate "org.reactivestreams", "one.oktw.relocate.org.reactivestreams"
-//    relocate "io.fabric8", "one.oktw.relocate.io.fabric8"
-//    relocate "io.lettuce", "one.oktw.relocate.io.lettuce"
-//    relocate "io.netty", "one.oktw.relocate.io.netty"
-//    relocate "com.fasterxml", "one.oktw.relocate.com.fasterxml"
-//    relocate "com.fkorotkov", "one.oktw.relocate.com.fkorotkov"
-//    relocate "com.squareup", "one.oktw.relocate.com.squareup"
-//    relocate "okhttp3", "one.oktw.relocate.okhttp3"
-//    relocate "okio", "one.oktw.relocate.okio"
-//    relocate "reactor", "one.oktw.relocate.reactor"
-
-//    minimize()
+    archiveClassifier.set('')
 }
 
 jar.enabled = false

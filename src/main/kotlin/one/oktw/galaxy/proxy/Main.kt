@@ -13,7 +13,7 @@ import io.fabric8.kubernetes.client.internal.readiness.Readiness
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import net.kyori.adventure.text.TextComponent
+import net.kyori.adventure.text.Component
 import one.oktw.galaxy.proxy.command.Lobby
 import one.oktw.galaxy.proxy.config.ConfigManager
 import one.oktw.galaxy.proxy.event.ChatExchange
@@ -120,7 +120,7 @@ class Main {
             proxy.eventManager.register(this, KickedFromServerEvent::class.java) {
                 if (it.server == lobby || !this::lobby.isInitialized || it.kickedDuringServerConnect()) return@register // Ignore exist player
 
-                it.result = KickedFromServerEvent.RedirectPlayer.create(lobby, TextComponent.empty())
+                it.result = KickedFromServerEvent.RedirectPlayer.create(lobby, Component.empty())
             }
 
             chatExchange = ChatExchange(MESSAGE_TOPIC)

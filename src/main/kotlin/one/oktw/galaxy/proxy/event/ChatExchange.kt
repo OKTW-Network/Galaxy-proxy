@@ -7,6 +7,7 @@ import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.Style
@@ -130,9 +131,9 @@ class ChatExchange(private val topic: String) {
                         .let {
                             if (target in it) {
                                 if (event.data.server != playerSource && textComponent is TranslatableComponent) {
-                                    val newText = TranslatableComponent.builder(textComponent.key())
+                                    val newText = Component.translatable().key(textComponent.key())
                                         .args(textComponent.args())
-                                        .style(Style.builder().color(NamedTextColor.GRAY).build())
+                                        .style(Style.style().color(NamedTextColor.GRAY).build())
                                         .append(textComponent.children())
                                         .build()
 
