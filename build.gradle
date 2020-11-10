@@ -10,25 +10,16 @@ version '1.0-SNAPSHOT'
 repositories {
     mavenCentral()
     jcenter()
-    maven { url "https://kotlin.bintray.com/kotlinx" }
     maven { url = "https://jitpack.io" }
     maven {
         name 'velocity'
-        url 'https://repo.velocitypowered.com/snapshots/'
-    }
-    maven {
-        name = 'sponge'
-        url = 'https://repo.spongepowered.org/maven'
-    }
-    maven {
-        name = 'minecraft'
-        url "https://libraries.minecraft.net"
+        url 'https://nexus.velocitypowered.com/repository/maven-public'
     }
 }
 
 dependencies {
-    kapt 'com.velocitypowered:velocity-api:1.1.0-SNAPSHOT'
-    compileOnly 'com.velocitypowered:velocity-api:1.1.0-SNAPSHOT'
+    kapt 'com.velocitypowered:velocity-api:1.1.1'
+    compileOnly 'com.velocitypowered:velocity-api:1.1.1'
     implementation 'io.fabric8:kubernetes-client:4.11.1'
     implementation 'com.fkorotkov:kubernetes-dsl:2.8.1'
     implementation 'io.lettuce:lettuce-core:5.3.4.RELEASE'
