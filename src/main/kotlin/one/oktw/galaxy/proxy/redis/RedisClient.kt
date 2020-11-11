@@ -58,9 +58,7 @@ class RedisClient {
 
     suspend fun getPlayers(keyword: String = "", number: Long = 12) = playersDB.run {
         scan(ScanArgs().limit(number).match("$keyword*"))?.keys?.run {
-            if (isEmpty()) {
-                emptyList()
-            } else {
+            if (isNotEmpty()) {
                 map {
                     GameProfile(
                         UUID.fromString(hget(it, "uuid")),
@@ -68,7 +66,7 @@ class RedisClient {
                         gson.fromJson(hget(it, "properties"), object : TypeToken<List<GameProfile.Property>>() {}.type)
                     ) to (hget(it, "latency")?.toLongOrNull() ?: 0)
                 }
-            }
-        }
+            } else null
+        } ?: emptyList()
     }
 }
