@@ -6,7 +6,8 @@ import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.util.GameProfile
 import io.lettuce.core.RedisClient
 import io.lettuce.core.ScanArgs
-import kotlinx.coroutines.future.await
+import io.lettuce.core.api.coroutines
+import kotlinx.coroutines.runBlocking
 import one.oktw.galaxy.proxy.Main.Companion.main
 import java.util.*
 
@@ -18,8 +19,8 @@ class RedisClient {
 
     private val gson = Gson()
     private val client = RedisClient.create(main.config.redisConfig.URI)
-    private val playersDB = client.connect().async().apply { select(DB_PLAYERS) }
-    private val galaxyDB = client.connect().async().apply { select(DB_GALAXY) }
+    private val playersDB = client.connect().coroutines().apply { runBlocking { select(DB_PLAYERS) } }
+    private val galaxyDB = client.connect().coroutines().apply { runBlocking { select(DB_GALAXY) } }
 
     fun version() = client.connect().sync()
         .info("server")
@@ -33,7 +34,7 @@ class RedisClient {
 
     suspend fun addPlayer(player: Player, ttl: Long = 180) {
         playersDB.apply {
-            if (exists(player.username).await() == 0L) {
+            if (exists(player.username) == 0L) {
                 hmset(
                     player.username,
                     mapOf(
@@ -41,39 +42,29 @@ class RedisClient {
                         Pair("latency", player.ping.toString()),
                         Pair("properties", gson.toJson(player.gameProfileProperties))
                     )
-                ).await()
+                )
             }
 
-            hset(player.username, "latency", player.ping.toString()).await()
-            expire(player.username, ttl).await()
+            hset(player.username, "latency", player.ping.toString())
+            expire(player.username, ttl)
         }
     }
 
-    suspend fun delPlayer(name: String) = playersDB.del(name).await()
+    suspend fun delPlayer(name: String) = playersDB.del(name)
 
-    suspend fun getPlayerNumber(): Long = playersDB.dbsize().await()
+    suspend fun getPlayerNumber(): Long = playersDB.dbsize() ?: 0
 
     suspend fun getPlayers(keyword: String = "", number: Long = 12) = playersDB.run {
-        scan(ScanArgs().limit(number).match("$keyword*"))
-            .await()
-            .keys
-            .run {
-                if (isEmpty()) {
-                    emptyList()
-                } else {
-                    map {
-                        val data = hgetall(it).await()
-
-                        GameProfile(
-                            UUID.fromString(data["uuid"]),
-                            it,
-                            gson.fromJson(
-                                data["properties"],
-                                object : TypeToken<List<GameProfile.Property>>() {}.type
-                            )
-                        ) to data["latency"]!!.toLong()
-                    }
+        scan(ScanArgs().limit(number).match("$keyword*"))?.keys?.run {
+            if (isNotEmpty()) {
+                map {
+                    GameProfile(
+                        UUID.fromString(hget(it, "uuid")),
+                        it,
+                        gson.fromJson(hget(it, "properties"), object : TypeToken<List<GameProfile.Property>>() {}.type)
+                    ) to (hget(it, "latency")?.toLongOrNull() ?: 0)
                 }
-            }
+            } else null
+        } ?: emptyList()
     }
 }
