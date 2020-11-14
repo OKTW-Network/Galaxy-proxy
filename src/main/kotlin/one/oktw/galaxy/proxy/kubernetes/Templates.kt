@@ -40,7 +40,10 @@ object Templates {
             spec {
                 imagePullSecrets = listOf(LocalObjectReference(spec.PullSecret))
                 securityContext { fsGroup = 1000 }
-                this.volumes = listOf(newVolume { this.name = "minecraft"; persistentVolumeClaim { claimName = name } })
+                this.volumes = listOf(newVolume {
+                    this.name = "minecraft"
+                    persistentVolumeClaim { claimName = name }
+                })
 
                 containers = listOf(newContainer {
                     this.name = "minecraft"
@@ -59,20 +62,24 @@ object Templates {
                     })
 
                     volumeMounts = listOf(
-                        newVolumeMount { this.name = "minecraft";subPath = "world";mountPath = "/app/minecraft/world" }
+                        newVolumeMount {
+                            this.name = "minecraft"
+                            subPath = "world"
+                            mountPath = "/app/minecraft/world"
+                        }
                     )
 
                     lifecycle { preStop { exec { command = listOf("control", "stop") } } }
+                    terminationGracePeriodSeconds = 60
                     readinessProbe {
                         initialDelaySeconds = 30
-                        periodSeconds = 15
-                        timeoutSeconds = 1
-                        successThreshold = 1
+                        periodSeconds = 5
+                        timeoutSeconds = 3
                         exec { command = listOf("control", "ping") }
                     }
                     livenessProbe {
-                        initialDelaySeconds = 30
-                        periodSeconds = 60
+                        initialDelaySeconds = 180
+                        periodSeconds = 30
                         timeoutSeconds = 10
                         successThreshold = 1
                         failureThreshold = 3
