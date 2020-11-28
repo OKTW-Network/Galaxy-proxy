@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    kapt 'com.velocitypowered:velocity-api:1.1.1'
+    kapt 'com.velocitypowered:velocity-api:1.1.2'
     compileOnly 'com.velocitypowered:velocity-api:1.1.1'
     implementation 'io.fabric8:kubernetes-client:4.13.0'
     implementation 'com.fkorotkov:kubernetes-dsl:2.8.1'
