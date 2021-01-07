@@ -105,6 +105,7 @@ class Main {
                             )
                         }
                 } catch (e: Exception) {
+                    logger.error("Failed create lobby.", e)
                     exitProcess(1)
                 }
             }
