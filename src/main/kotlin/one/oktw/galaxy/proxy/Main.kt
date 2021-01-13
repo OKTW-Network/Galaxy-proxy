@@ -119,9 +119,11 @@ class Main {
 
             // Connect back to lobby on disconnect from galaxies
             proxy.eventManager.register(this, KickedFromServerEvent::class.java) {
-                if (it.server == lobby || !this::lobby.isInitialized || it.kickedDuringServerConnect()) return@register // Ignore exist player
-
-                it.result = KickedFromServerEvent.RedirectPlayer.create(lobby, Component.empty())
+                if (it.server == lobby || !this::lobby.isInitialized || it.kickedDuringServerConnect()) {
+                    it.result = KickedFromServerEvent.DisconnectPlayer.create(it.serverKickReason.orElse(Component.empty()))
+                } else {
+                    it.result = KickedFromServerEvent.RedirectPlayer.create(lobby, Component.empty())
+                }
             }
 
             chatExchange = ChatExchange(MESSAGE_TOPIC)
