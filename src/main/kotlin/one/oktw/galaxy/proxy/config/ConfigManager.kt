@@ -44,7 +44,7 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
     private fun readConfig() {
         proxyConfig = fallbackToResource("proxy.json").reader().use { gson.fromJson(it, ProxyConfig::class.java) }
         redisConfig = fallbackToResource("redis.json").reader().use { gson.fromJson(it, RedisConfig::class.java) }
-        mongoConfig = fallbackToResource("mongo.json").reader().use { gson.fromJson(it, MongoConfig::class.java) }
+        mongoConfig = fallbackToResource("galaxies/mongo.json").reader().use { gson.fromJson(it, MongoConfig::class.java) }
     }
 
     private fun readGalaxies(path: Path) {
