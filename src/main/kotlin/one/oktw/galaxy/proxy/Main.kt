@@ -94,7 +94,7 @@ class Main {
             // Start lobby TODO auto scale lobby
             GlobalScope.launch {
                 try {
-                    lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config.galaxies["lobby"]!!)
+                    lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config.galaxies["lobby"]!!, config.mongoConfig)
                         .let { if (!Readiness.isReady(it)) kubernetesClient.waitReady(it) else it }
                         .let {
                             proxy.registerServer(

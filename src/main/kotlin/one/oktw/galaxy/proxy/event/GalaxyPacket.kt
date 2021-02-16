@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import one.oktw.galaxy.proxy.Main
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.*
@@ -71,7 +72,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
                             .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
 
                         // Start galaxy
-                        galaxy = kubernetes.getOrCreateGalaxyAndVolume(id, main.config.galaxies["normal_galaxy"]!!) // TODO multi type
+                        galaxy = kubernetes.getOrCreateGalaxyAndVolume(id, main.config.galaxies["normal_galaxy"]!!, Main.main.config.mongoConfig) // TODO multi type
 
                         // Send packet to server: Galaxy is starting
                         ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Starting))
