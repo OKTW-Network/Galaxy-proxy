@@ -8,6 +8,7 @@ import io.fabric8.kubernetes.client.internal.readiness.ReadinessWatcher
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import one.oktw.galaxy.proxy.config.model.GalaxySpec
+import one.oktw.galaxy.proxy.config.model.MongoConfig
 import one.oktw.galaxy.proxy.kubernetes.Templates.galaxy
 import one.oktw.galaxy.proxy.kubernetes.Templates.volume
 import java.util.concurrent.TimeUnit
@@ -17,17 +18,17 @@ class KubernetesClient {
 
     suspend fun info(): VersionInfo = withContext(IO) { client.version }
 
-    suspend fun getOrCreateGalaxyAndVolume(name: String, spec: GalaxySpec): Pod {
-        return getGalaxy(name) ?: createGalaxy(name, spec)
+    suspend fun getOrCreateGalaxyAndVolume(name: String, spec: GalaxySpec, mongoConfig: MongoConfig): Pod {
+        return getGalaxy(name) ?: createGalaxy(name, spec, mongoConfig)
     }
 
     suspend fun getGalaxy(name: String): Pod? = withContext(IO) {
         client.pods().withName(name).get()
     }
 
-    suspend fun createGalaxy(name: String, spec: GalaxySpec): Pod = withContext(IO) {
+    suspend fun createGalaxy(name: String, spec: GalaxySpec, mongoConfig: MongoConfig): Pod = withContext(IO) {
         getOrCreateVolume(name, spec.Storage!!)
-        client.pods().create(galaxy(name, spec))
+        client.pods().create(galaxy(name, spec, mongoConfig))
     }
 
     suspend fun getOrCreateVolume(name: String, spec: GalaxySpec.GalaxyStorage): PersistentVolumeClaim {

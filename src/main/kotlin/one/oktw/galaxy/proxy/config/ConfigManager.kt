@@ -2,6 +2,7 @@ package one.oktw.galaxy.proxy.config
 
 import com.google.gson.Gson
 import one.oktw.galaxy.proxy.config.model.GalaxySpec
+import one.oktw.galaxy.proxy.config.model.MongoConfig
 import one.oktw.galaxy.proxy.config.model.ProxyConfig
 import one.oktw.galaxy.proxy.config.model.RedisConfig
 import java.io.InputStream
@@ -16,6 +17,8 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
     lateinit var proxyConfig: ProxyConfig
         private set
     lateinit var redisConfig: RedisConfig
+        private set
+    lateinit var mongoConfig: MongoConfig
         private set
     val galaxies = HashMap<String, GalaxySpec>()
 
@@ -41,6 +44,7 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
     private fun readConfig() {
         proxyConfig = fallbackToResource("proxy.json").reader().use { gson.fromJson(it, ProxyConfig::class.java) }
         redisConfig = fallbackToResource("redis.json").reader().use { gson.fromJson(it, RedisConfig::class.java) }
+        mongoConfig = fallbackToResource("galaxies/mongo.json").reader().use { gson.fromJson(it, MongoConfig::class.java) }
     }
 
     private fun readGalaxies(path: Path) {

@@ -5,6 +5,7 @@ import com.velocitypowered.api.proxy.config.ProxyConfig
 import io.fabric8.kubernetes.api.model.*
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.config.model.GalaxySpec
+import one.oktw.galaxy.proxy.config.model.MongoConfig
 import java.nio.charset.StandardCharsets
 
 // Velocity config hack
@@ -32,7 +33,7 @@ object Templates {
         }
     }
 
-    fun galaxy(name: String, spec: GalaxySpec): Pod {
+    fun galaxy(name: String, spec: GalaxySpec, mongoConfig: MongoConfig): Pod {
         requireNotNull(spec.Storage) { "Storage spec undefined!" }
 
         return newPod {
@@ -52,6 +53,7 @@ object Templates {
                     env = listOf(
                         EnvVar("FABRIC_PROXY_SECRET", forwardSecret, null),
                         EnvVar("resourcePack", spec.ResourcePack, null),
+                        EnvVar("dbPath", mongoConfig.URI, null),
                         EnvVar("GALAXY_ID", name, null)
                     )
 
