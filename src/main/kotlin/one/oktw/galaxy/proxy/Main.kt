@@ -95,7 +95,7 @@ class Main {
             GlobalScope.launch {
                 try {
                     lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config.galaxies["lobby"]!!)
-                        .let { if (!Readiness.isReady(it)) kubernetesClient.waitReady(it) else it }
+                        .let { if (!Readiness.isPodReady(it)) kubernetesClient.waitReady(it) else it }
                         .let {
                             proxy.registerServer(
                                 ServerInfo(

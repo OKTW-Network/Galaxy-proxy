@@ -47,7 +47,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
                     var galaxy = main.kubernetesClient.getGalaxy(id)
 
                     if (galaxy != null) {
-                        if (!Readiness.isReady(galaxy)) {
+                        if (!Readiness.isPodReady(galaxy)) {
                             // Send packet to server: Galaxy is starting
                             ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Starting))
                                 .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
