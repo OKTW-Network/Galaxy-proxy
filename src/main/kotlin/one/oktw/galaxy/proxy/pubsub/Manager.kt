@@ -63,11 +63,11 @@ class Manager(redisURI: String, prefix: String) {
         if (unwrappedData.source == instanceId) return
 
         MessageDeliveryEvent(topic, unwrappedData.message)
-            .let { main.proxy.eventManager.fireAndForget(it) }
+            .let { main.proxy.eventManager().fireAndForget(it) }
     }
 
     fun send(topic: String, item: Packet) {
-        main.proxy.eventManager.fireAndForget(MessageDeliveryEvent(topic, item))
+        main.proxy.eventManager().fireAndForget(MessageDeliveryEvent(topic, item))
         send(topic, ProxyAPI.encode(MessageWrapper(instanceId, item)))
     }
 

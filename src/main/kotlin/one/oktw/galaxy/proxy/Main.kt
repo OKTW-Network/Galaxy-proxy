@@ -1,15 +1,17 @@
 package one.oktw.galaxy.proxy
 
 import com.google.inject.Inject
+import com.velocitypowered.api.event.EventTask
 import com.velocitypowered.api.event.Subscribe
+import com.velocitypowered.api.event.lifecycle.ProxyInitializeEvent
 import com.velocitypowered.api.event.player.KickedFromServerEvent
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
-import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.RegisteredServer
 import com.velocitypowered.api.proxy.server.ServerInfo
 import io.fabric8.kubernetes.client.internal.readiness.Readiness
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -70,8 +72,8 @@ class Main {
                 logger.info("Redis version: ${redisClient.version()}")
             }
 
-            proxy.channelRegistrar.register(ChatExchange.eventId)
-            proxy.channelRegistrar.register(ChatExchange.eventIdResponse)
+            proxy.channelRegistrar().register(ChatExchange.eventId)
+            proxy.channelRegistrar().register(ChatExchange.eventIdResponse)
             logger.info("Galaxy Init!")
         } catch (err: Throwable) {
             logger.error("Failed to init the proxy!", err)
@@ -79,17 +81,18 @@ class Main {
         }
     }
 
+    @DelicateCoroutinesApi
     @Subscribe
     fun onProxyInitialize(event: ProxyInitializeEvent) {
         try {
-            proxy.commandManager.unregister("server") // Disable server command
-            proxy.commandManager.register(proxy.commandManager.metaBuilder("lobby").build(), Lobby())
+            proxy.commandManager().unregister("server") // Disable server command
+            proxy.commandManager().register(proxy.commandManager().createMetaBuilder("lobby").build(), Lobby())
 
-            proxy.channelRegistrar.register(GalaxyPacket.MESSAGE_CHANNEL_ID)
+            proxy.channelRegistrar().register(GalaxyPacket.MESSAGE_CHANNEL_ID)
 
-            proxy.eventManager.register(this, PlayerListWatcher(config.proxyConfig.ProtocolVersion))
-            proxy.eventManager.register(this, TabListUpdater())
-            proxy.eventManager.register(this, GalaxyPacket())
+            proxy.eventManager().register(this, PlayerListWatcher(config.proxyConfig.ProtocolVersion))
+            proxy.eventManager().register(this, TabListUpdater())
+            proxy.eventManager().register(this, GalaxyPacket())
 
             // Start lobby TODO auto scale lobby
             GlobalScope.launch {
@@ -111,23 +114,27 @@ class Main {
             }
 
             // Connect player to lobby
-            proxy.eventManager.register(this, ServerPreConnectEvent::class.java) {
-                if (it.player.currentServer.isPresent || !this::lobby.isInitialized) return@register // Ignore exist player
+            proxy.eventManager().register(this, ServerPreConnectEvent::class.java) {
+                EventTask.of {
+                    if (it.player().connectedServer() != null || !this::lobby.isInitialized) return@of // Ignore exist player
 
-                it.result = ServerPreConnectEvent.ServerResult.allowed(lobby)
+                    it.setResult(ServerPreConnectEvent.ServerResult.allowed(lobby))
+                }
             }
 
             // Connect back to lobby on disconnect from galaxies
-            proxy.eventManager.register(this, KickedFromServerEvent::class.java) {
-                if (it.server == lobby || !this::lobby.isInitialized || it.kickedDuringServerConnect()) {
-                    it.result = KickedFromServerEvent.DisconnectPlayer.create(it.serverKickReason.orElse(Component.empty()))
-                } else {
-                    it.result = KickedFromServerEvent.RedirectPlayer.create(lobby, Component.empty())
+            proxy.eventManager().register(this, KickedFromServerEvent::class.java) {
+                EventTask.of {
+                    if (it.server() == lobby || !this::lobby.isInitialized || it.kickedDuringServerConnect()) {
+                        it.setResult(KickedFromServerEvent.DisconnectPlayer.create(it.serverKickReason()))
+                    } else {
+                        it.setResult(KickedFromServerEvent.RedirectPlayer.create(lobby, Component.empty()))
+                    }
                 }
             }
 
             chatExchange = ChatExchange(MESSAGE_TOPIC)
-            proxy.eventManager.register(this, chatExchange)
+            proxy.eventManager().register(this, chatExchange)
         } catch (err: Throwable) {
             logger.error("Failed to init the proxy!", err)
             exitProcess(1)

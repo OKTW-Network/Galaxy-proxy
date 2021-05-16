@@ -1,9 +1,9 @@
 package one.oktw.galaxy.proxy.event
 
 import com.velocitypowered.api.event.Subscribe
-import com.velocitypowered.api.event.connection.PostLoginEvent
+import com.velocitypowered.api.event.lifecycle.ProxyShutdownEvent
+import com.velocitypowered.api.event.player.PostLoginEvent
 import com.velocitypowered.api.event.player.ServerConnectedEvent
-import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.proxy.player.TabListEntry
 import com.velocitypowered.api.util.GameProfile
 import kotlinx.coroutines.*
@@ -53,27 +53,27 @@ class TabListUpdater : CoroutineScope by CoroutineScope(Dispatchers.Default + Su
     private suspend fun update() {
         tabFooter = text("Online Player: ", NamedTextColor.BLUE)
             .append(text(main.redisClient.getPlayerNumber().toString(), NamedTextColor.GREEN))
-        playerListCache = main.redisClient.getPlayers(number = 100).sortedBy { it.first.name }
+        playerListCache = main.redisClient.getPlayers(number = 100).sortedBy { it.first.name() }
 
-        main.proxy.allPlayers.forEach { player ->
-            player.tabList.setHeaderAndFooter(tabHeader, tabFooter)
+        main.proxy.connectedPlayers().forEach { player ->
+            player.tabList().setHeaderAndFooter(tabHeader, tabFooter)
 
             // Cleanup old data
-            player.tabList.entries.forEach {
-                if (it.profile.id != player.uniqueId) {
-                    player.tabList.removeEntry(it.profile.id)
+            player.tabList().entries().forEach {
+                if (it.gameProfile().uuid() != player.id()) {
+                    player.tabList().removeEntry(it.gameProfile().uuid())
                 }
             }
 
             playerListCache.forEach { (profile, ping) ->
-                if (profile.id != player.uniqueId) {
+                if (profile.uuid() != player.id()) {
                     TabListEntry.builder()
                         .gameMode(0) // TODO maybe need sync gameMode
                         .profile(profile)
                         .latency(ping.toInt())
-                        .tabList(player.tabList)
+                        .tabList(player.tabList())
                         .build()
-                        .let(player.tabList::addEntry)
+                        .let(player.tabList()::addEntry)
                 }
             }
         }

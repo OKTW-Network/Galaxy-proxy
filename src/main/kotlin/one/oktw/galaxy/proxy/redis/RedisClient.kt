@@ -2,7 +2,7 @@ package one.oktw.galaxy.proxy.redis
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.velocitypowered.api.proxy.Player
+import com.velocitypowered.api.proxy.connection.Player
 import com.velocitypowered.api.util.GameProfile
 import io.lettuce.core.RedisClient
 import io.lettuce.core.ScanArgs
@@ -34,19 +34,19 @@ class RedisClient {
 
     suspend fun addPlayer(player: Player, ttl: Long = 180) {
         playersDB.apply {
-            if (exists(player.username) == 0L) {
+            if (exists(player.username()) == 0L) {
                 hmset(
-                    player.username,
+                    player.username(),
                     mapOf(
-                        Pair("uuid", player.uniqueId.toString()),
-                        Pair("latency", player.ping.toString()),
-                        Pair("properties", gson.toJson(player.gameProfileProperties))
+                        Pair("uuid", player.id().toString()),
+                        Pair("latency", player.ping().toString()),
+                        Pair("properties", gson.toJson(player.gameProfile().properties()))
                     )
                 )
             }
 
-            hset(player.username, "latency", player.ping.toString())
-            expire(player.username, ttl)
+            hset(player.username(), "latency", player.ping().toString())
+            expire(player.username(), ttl)
         }
     }
 

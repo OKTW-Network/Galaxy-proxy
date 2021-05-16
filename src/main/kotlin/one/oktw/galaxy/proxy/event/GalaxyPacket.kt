@@ -2,10 +2,9 @@ package one.oktw.galaxy.proxy.event
 
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.PluginMessageEvent
-import com.velocitypowered.api.event.connection.PluginMessageEvent.ForwardResult
-import com.velocitypowered.api.proxy.Player
-import com.velocitypowered.api.proxy.ServerConnection
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier
+import com.velocitypowered.api.proxy.connection.Player
+import com.velocitypowered.api.proxy.connection.ServerConnection
+import com.velocitypowered.api.proxy.messages.PluginChannelId
 import com.velocitypowered.api.proxy.server.ServerInfo
 import io.fabric8.kubernetes.client.KubernetesClientTimeoutException
 import io.fabric8.kubernetes.client.internal.readiness.Readiness
@@ -13,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import net.kyori.adventure.key.Key
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.*
@@ -21,24 +21,24 @@ import java.util.*
 
 class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJob()) {
     companion object {
-        val MESSAGE_CHANNEL_ID: MinecraftChannelIdentifier = MinecraftChannelIdentifier.create("galaxy", "proxy")
+        val MESSAGE_CHANNEL_ID: PluginChannelId = PluginChannelId.wrap(Key.key("galaxy", "proxy"))
     }
 
     @Subscribe
     fun onPacket(event: PluginMessageEvent) {
-        if (event.identifier == MESSAGE_CHANNEL_ID) event.result = ForwardResult.handled() else return
+        if (event.channel() == MESSAGE_CHANNEL_ID) event.setHandled(true) else return
 
-        val source = event.source as? ServerConnection ?: return
-        val player = event.target as? Player ?: return
+        val source = event.source() as? ServerConnection ?: return
+        val player = event.source() as? Player ?: return
 
         launch {
-            when (val data = ProxyAPI.decode<Packet>(event.data)) {
+            when (val data = ProxyAPI.decode<Packet>(event.rawMessage())) {
                 is WhoAmI -> {
-                    ProxyAPI.encode(WhoAmI.Result(UUID.fromString(source.server.serverInfo.name)))
+                    ProxyAPI.encode(WhoAmI.Result(UUID.fromString(source.serverInfo().name())))
                         .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
                 }
                 is SearchPlayer -> {
-                    main.redisClient.getPlayers(data.keyword, data.number.toLong()).map { it.first.name }
+                    main.redisClient.getPlayers(data.keyword, data.number.toLong()).map { it.first.name() }
                         .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, ProxyAPI.encode(SearchPlayer.Result(it))) }
                 }
                 is CreateGalaxy -> {
@@ -94,10 +94,10 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
                     // Send player to galaxy TODO only create not join
                     main.proxy.run {
                         val address = InetSocketAddress(galaxy!!.status.podIP, 25565)
-                        var server = getServer(id).orElseGet { registerServer(ServerInfo(id, address)) }
+                        var server = server(id) ?: registerServer(ServerInfo(id, address))
 
-                        if (server.serverInfo.address != address) {
-                            unregisterServer(server.serverInfo)
+                        if (server.serverInfo().address() != address) {
+                            unregisterServer(server.serverInfo())
                             server = registerServer(ServerInfo(id, address))
                         }
 

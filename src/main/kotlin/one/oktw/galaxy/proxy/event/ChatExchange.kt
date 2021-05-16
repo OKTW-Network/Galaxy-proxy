@@ -2,11 +2,13 @@ package one.oktw.galaxy.proxy.event
 
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.PluginMessageEvent
-import com.velocitypowered.api.proxy.ServerConnection
-import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier
+import com.velocitypowered.api.proxy.connection.ServerConnection
+import com.velocitypowered.api.proxy.messages.PluginChannelId
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import net.kyori.adventure.key.Key
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TranslatableComponent
 import net.kyori.adventure.text.format.NamedTextColor
@@ -21,14 +23,13 @@ import one.oktw.galaxy.proxy.api.packet.Packet
 import one.oktw.galaxy.proxy.model.ChatData
 import one.oktw.galaxy.proxy.model.ChatResponse
 import java.util.*
-import kotlin.collections.HashMap
 
 class ChatExchange(private val topic: String) {
     companion object {
         private const val MESSAGE_TIMEOUT = 2000L
 
-        val eventId = MinecraftChannelIdentifier.create("galaxy", "proxy-chat")!!
-        val eventIdResponse = MinecraftChannelIdentifier.create("galaxy", "proxy-chat-response")!!
+        val eventId: PluginChannelId = PluginChannelId.wrap(Key.key("galaxy", "proxy-chat"))
+        val eventIdResponse: PluginChannelId = PluginChannelId.wrap(Key.key("galaxy", "proxy-chat-response"))
     }
 
     private val topicResponse = "$topic-response"
@@ -37,32 +38,33 @@ class ChatExchange(private val topic: String) {
 
     @Subscribe
     fun onPlayerRegister(event: PluginMessageEvent) {
-        if (event.identifier != eventId) return
-        event.result = PluginMessageEvent.ForwardResult.handled()
+        if (event.channel() != eventId) return
+        event.setHandled(true)
 
-        val source = event.source as? ServerConnection ?: return
+        val source = event.source() as? ServerConnection ?: return
 
         val packet = try {
-            ProxyAPI.decode<Packet>(event.data) as? MessageUpdateChannel ?: return
+            ProxyAPI.decode<Packet>(event.rawMessage()) as? MessageUpdateChannel ?: return
         } catch (err: Throwable) {
             main.logger.error("Failed decode", err)
             return
         }
 
-        val player = if (packet.user == ProxyAPI.dummyUUID) source.player.uniqueId else packet.user
+        val player = if (packet.user == ProxyAPI.dummyUUID) source.player().id() else packet.user
 
         listenMap[player] = packet.listenTo
     }
 
+    @DelicateCoroutinesApi
     @Subscribe
     fun onServerSend(event: PluginMessageEvent) {
-        if (event.identifier != eventId) return
-        event.result = PluginMessageEvent.ForwardResult.handled()
+        if (event.channel() != eventId) return
+        event.setHandled(true)
 
-        val source = event.source as? ServerConnection ?: return
+        val source = event.source() as? ServerConnection ?: return
 
         val unformattedPacket = try {
-            ProxyAPI.decode<Packet>(event.data) as? MessageSend ?: return
+            ProxyAPI.decode<Packet>(event.rawMessage()) as? MessageSend ?: return
         } catch (err: Throwable) {
             main.logger.error("Failed decode", err)
             return
@@ -70,7 +72,7 @@ class ChatExchange(private val topic: String) {
 
         val packet = if (unformattedPacket.sender == ProxyAPI.dummyUUID) {
             MessageSend(
-                sender = source.player.uniqueId,
+                sender = source.player().id(),
                 message = unformattedPacket.message,
                 targets = unformattedPacket.targets,
                 id = unformattedPacket.id,
@@ -86,8 +88,8 @@ class ChatExchange(private val topic: String) {
                 delay(MESSAGE_TIMEOUT)
                 ackMaps.remove(packet.id!!)
 
-                val players = main.proxy.allPlayers
-                players.find { it.uniqueId == packet.sender }?.sendPluginMessage(
+                val players = main.proxy.connectedPlayers()
+                players.find { it.id() == packet.sender }?.sendPluginMessage(
                     eventIdResponse, ProxyAPI.encode(
                         MessageSendResponse(
                             sender = packet.sender,
@@ -101,7 +103,7 @@ class ChatExchange(private val topic: String) {
 
         val chatData = ChatData(
             try {
-                UUID.fromString(source.serverInfo.name)
+                UUID.fromString(source.serverInfo().name())
             } catch (err: Throwable) {
                 ProxyAPI.dummyUUID
             }, packet
@@ -117,17 +119,17 @@ class ChatExchange(private val topic: String) {
         if (event.data is ChatData) {
             val textComponent = GsonComponentSerializer.gson().deserialize(event.data.packet.message)
 
-            main.proxy.allPlayers.forEach { player ->
-                val playerSource = player.currentServer.orElse(null)?.let {
+            main.proxy.connectedPlayers().forEach { player ->
+                val playerSource = player.connectedServer()?.let {
                     try {
-                        UUID.fromString(it.serverInfo.name)
+                        UUID.fromString(it.serverInfo().name())
                     } catch (err: Throwable) {
                         null
                     }
                 } ?: ProxyAPI.dummyUUID
 
                 event.data.packet.targets.forEach { target ->
-                    listenMap.computeIfAbsent(player.uniqueId) { listOf(player.uniqueId, ProxyAPI.globalChatChannel) }
+                    listenMap.computeIfAbsent(player.id()) { listOf(player.id(), ProxyAPI.globalChatChannel) }
                         .let {
                             if (target in it) {
                                 if (event.data.server != playerSource && textComponent is TranslatableComponent) {
@@ -157,7 +159,7 @@ class ChatExchange(private val topic: String) {
                 val packet = ackMaps[event.data.id] ?: return
                 ackMaps.remove(event.data.id)
 
-                main.proxy.allPlayers.find { it.uniqueId == packet.sender }?.sendPluginMessage(
+                main.proxy.connectedPlayers().find { it.id() == packet.sender }?.sendPluginMessage(
                     eventIdResponse,
                     ProxyAPI.encode(MessageSendResponse(sender = packet.sender, id = packet.id!!, result = true))
                 )

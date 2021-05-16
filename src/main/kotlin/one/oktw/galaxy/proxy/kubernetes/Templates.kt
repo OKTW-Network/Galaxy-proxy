@@ -14,7 +14,7 @@ private fun ProxyConfig.getForwardingSecret(): ByteArray {
 
 object Templates {
     private val forwardSecret by lazy {
-        main.proxy.configuration.getForwardingSecret().toString(StandardCharsets.UTF_8)
+        main.proxy.configuration().getForwardingSecret().toString(StandardCharsets.UTF_8)
     }
 
     fun volume(name: String, storageClass: String, size: String): PersistentVolumeClaim = newPersistentVolumeClaim {
