@@ -4,7 +4,7 @@ stages:
 
 build:
   stage: build
-  image: adoptopenjdk/openjdk8:alpine-slim
+  image: adoptopenjdk/openjdk16:alpine-slim
   cache:
     paths:
       - .gradle/wrapper
