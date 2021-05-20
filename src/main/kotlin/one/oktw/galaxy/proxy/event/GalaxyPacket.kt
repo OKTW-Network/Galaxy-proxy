@@ -2,7 +2,6 @@ package one.oktw.galaxy.proxy.event
 
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.PluginMessageEvent
-import com.velocitypowered.api.proxy.connection.Player
 import com.velocitypowered.api.proxy.connection.ServerConnection
 import com.velocitypowered.api.proxy.messages.PluginChannelId
 import com.velocitypowered.api.proxy.server.ServerInfo
@@ -29,7 +28,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
         if (event.channel() == MESSAGE_CHANNEL_ID) event.setHandled(true) else return
 
         val source = event.source() as? ServerConnection ?: return
-        val player = event.source() as? Player ?: return
+        val player = source.player() ?: return
 
         launch {
             when (val data = ProxyAPI.decode<Packet>(event.rawMessage())) {
