@@ -37,6 +37,8 @@ tasks.withType(AbstractArchiveTask) {
 shadowJar {
     zip64 true
     archiveClassifier.set('')
+    exclude '*.aut'
+    exclude 'META-INF/maven/**'
 }
 
 jar.enabled = false
