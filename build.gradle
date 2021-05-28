@@ -1,7 +1,7 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.4.32'
-    id "org.jetbrains.kotlin.kapt" version "1.4.32"
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.5.10'
+    id "org.jetbrains.kotlin.kapt" version "1.5.10"
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
 }
 
 group 'one.oktw'
@@ -9,7 +9,6 @@ version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
-    jcenter()
     maven { url = "https://jitpack.io" }
     maven {
         name 'velocity'
@@ -23,14 +22,11 @@ dependencies {
     implementation 'io.fabric8:kubernetes-client:5.3.1'
     implementation 'com.fkorotkov:kubernetes-dsl:2.8.1'
     implementation 'io.lettuce:lettuce-core:6.1.2.RELEASE'
-    implementation 'one.oktw:galaxy-lib:9fe689aa'
+    implementation 'one.oktw:galaxy-lib:11f67fd9'
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "15"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "15"
+    kotlinOptions.jvmTarget = "16"
 }
 
 tasks.withType(AbstractArchiveTask) {
