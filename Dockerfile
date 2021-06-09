@@ -6,7 +6,7 @@ WORKDIR /app
 COPY --chown=1000 docker /app
 
 # Download Velocity
-ADD --chown=1000 https://versions.velocitypowered.com/download/1.1.7.jar /app/velocity.jar
+ADD --chown=1000 https://versions.velocitypowered.com/download/1.1.8.jar /app/velocity.jar
 
 # Run Server
 EXPOSE 25565
