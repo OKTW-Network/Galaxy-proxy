@@ -22,7 +22,7 @@ dependencies {
     implementation 'io.fabric8:kubernetes-client:5.3.1'
     implementation 'com.fkorotkov:kubernetes-dsl:2.8.1'
     implementation 'io.lettuce:lettuce-core:6.1.2.RELEASE'
-    implementation 'one.oktw:galaxy-lib:11f67fd9'
+    implementation 'one.oktw:galaxy-lib:beb0eabb'
 }
 
 compileKotlin {
