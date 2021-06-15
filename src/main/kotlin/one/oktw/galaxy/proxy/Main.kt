@@ -83,6 +83,7 @@ class Main {
     fun onProxyInitialize(event: ProxyInitializeEvent) {
         try {
             proxy.commandManager.unregister("server") // Disable server command
+            proxy.commandManager.unregister("shutdown") // Disable shutdown command
             proxy.commandManager.register(proxy.commandManager.metaBuilder("lobby").build(), Lobby())
 
             proxy.channelRegistrar.register(GalaxyPacket.MESSAGE_CHANNEL_ID)
