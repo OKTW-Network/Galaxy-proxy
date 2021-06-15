@@ -80,7 +80,7 @@ failover-on-unexpected-server-disconnect = true
 # default level of 6.
 compression-level = -1
 # Declares the proxy commands to 1.13+ clients.
-announce-proxy-commands = false
+announce-proxy-commands = true
 # Enables compatibility with HAProxy's PROXY protocol. If you don't know what this is for, then
 # don't enable it.
 haproxy-protocol = false
