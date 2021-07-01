@@ -32,8 +32,6 @@ jobs:
       - name: Copy build file
         run: cp build/libs/galaxy-proxy-1.0-SNAPSHOT.jar docker/plugins
 
-      - name: Build the Docker image and Publish to Registry
+      - name: Build the Docker image
         run: |
-          docker login docker.pkg.github.com -u "OKTW-Network" -p "${{ secrets.OKTW_PACKAGE }}"
-          docker build -t docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:latest .
-          docker push docker.pkg.github.com/oktw-network/galaxy-proxy/galaxy-proxy:latest
+          docker build .
