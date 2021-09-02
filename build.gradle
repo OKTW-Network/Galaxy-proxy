@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    kapt 'com.velocitypowered:velocity-api:3.0.0'
+    kapt 'com.velocitypowered:velocity-api:3.0.1'
     compileOnly 'com.velocitypowered:velocity-api:3.0.0'
     implementation 'io.fabric8:kubernetes-client:5.5.0'
     implementation 'com.github.fkorotkov:k8s-kotlin-dsl:3.0.1'
