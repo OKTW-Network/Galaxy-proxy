@@ -19,7 +19,7 @@ repositories {
 dependencies {
     kapt 'com.velocitypowered:velocity-api:3.0.0'
     compileOnly 'com.velocitypowered:velocity-api:3.0.0'
-    implementation 'io.fabric8:kubernetes-client:5.5.0'
+    implementation 'io.fabric8:kubernetes-client:5.7.1'
     implementation 'com.github.fkorotkov:k8s-kotlin-dsl:3.0.1'
     implementation 'io.lettuce:lettuce-core:6.1.4.RELEASE'
     implementation 'one.oktw:galaxy-lib:ca453b2'
