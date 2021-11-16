@@ -4,7 +4,7 @@ stages:
 
 build:
   stage: build
-  image: adoptopenjdk/openjdk16:alpine-slim
+  image: ibm-semeru-runtimes:open-16-jdk
   cache:
     paths:
       - .gradle/wrapper

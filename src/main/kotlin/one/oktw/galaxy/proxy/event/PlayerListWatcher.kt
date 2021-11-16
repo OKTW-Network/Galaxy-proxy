@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 class PlayerListWatcher(private val protocolVersion: Int) : CoroutineScope {
     private val job = SupervisorJob()
     private var updatePlayer = true
-    override val coroutineContext by lazy { Dispatchers.Unconfined + job }
+    override val coroutineContext = Dispatchers.IO + job
 
     init {
         launch {
