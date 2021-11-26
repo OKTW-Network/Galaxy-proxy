@@ -97,14 +97,7 @@ class Main {
                 try {
                     lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config.galaxies["lobby"]!!)
                         .let { if (!Readiness.isPodReady(it)) kubernetesClient.waitReady(it) else it }
-                        .let {
-                            proxy.registerServer(
-                                ServerInfo(
-                                    "galaxy-lobby",
-                                    InetSocketAddress(it.status.podIP, 25565)
-                                )
-                            )
-                        }
+                        .let { proxy.registerServer(ServerInfo("galaxy-lobby", InetSocketAddress(it.status.podIP, 25565))) }
                 } catch (e: Exception) {
                     logger.error("Failed create lobby.", e)
                     exitProcess(1)

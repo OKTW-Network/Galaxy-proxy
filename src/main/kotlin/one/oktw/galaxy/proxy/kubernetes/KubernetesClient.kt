@@ -4,7 +4,6 @@ import io.fabric8.kubernetes.api.model.PersistentVolumeClaim
 import io.fabric8.kubernetes.api.model.Pod
 import io.fabric8.kubernetes.client.DefaultKubernetesClient
 import io.fabric8.kubernetes.client.VersionInfo
-import io.fabric8.kubernetes.client.internal.readiness.ReadinessWatcher
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import one.oktw.galaxy.proxy.config.model.GalaxySpec
@@ -43,6 +42,6 @@ class KubernetesClient {
     }
 
     suspend fun waitReady(pod: Pod): Pod = withContext(IO) {
-        ReadinessWatcher(pod).also { client.pods().withName(pod.metadata.name).watch(it) }.await(5, TimeUnit.MINUTES)
+        client.pods().withName(pod.metadata.name).waitUntilReady(5, TimeUnit.MINUTES)
     }
 }
