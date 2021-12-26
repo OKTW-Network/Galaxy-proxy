@@ -1,5 +1,7 @@
 package one.oktw.galaxy.proxy
 
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.player.KickedFromServerEvent
@@ -16,6 +18,7 @@ import kotlinx.coroutines.*
 import net.kyori.adventure.text.Component
 import one.oktw.galaxy.proxy.command.Lobby
 import one.oktw.galaxy.proxy.config.ConfigManager
+import one.oktw.galaxy.proxy.config.model.GalaxySpec
 import one.oktw.galaxy.proxy.event.ChatExchange
 import one.oktw.galaxy.proxy.event.GalaxyPacket
 import one.oktw.galaxy.proxy.event.PlayerListWatcher
@@ -36,6 +39,9 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
         lateinit var main: Main
             private set
     }
+
+    private val gson = Gson()
+    var galaxies = HashMap<String, GalaxySpec>()
 
     lateinit var config: ConfigManager
         private set
@@ -96,8 +102,38 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
 
             // Start lobby TODO auto-scale lobby
             launch {
+                galaxies = kubernetesClient.getGalaxiesConfig { config ->
+                    config.forEach { (name, string) ->
+                        val type = name.removeSuffix(".json")
+                        val spec = try {
+                            gson.fromJson(string, GalaxySpec::class.java)
+                        } catch (e: JsonSyntaxException) {
+                            logger.error("Galaxies parser error.", e)
+                            null
+                        }
+
+                        spec?.let { galaxies[type] = it }
+                        // TODO rolling upgrade
+                        if (type == "lobby") {
+                            kubernetesClient.stopGalaxy("galaxy-lobby")
+                            try {
+                                lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", galaxies["lobby"]!!)
+                                    .let { if (!Readiness.isPodReady(it)) kubernetesClient.waitReady(it) else it }
+                                    .let {
+                                        proxy.unregisterServer(lobby.serverInfo)
+                                        proxy.registerServer(ServerInfo("galaxy-lobby", InetSocketAddress(it.status.podIP, 25565)))
+                                    }
+                            } catch (e: Exception) {
+                                logger.error("Failed create lobby.", e)
+                                exitProcess(1)
+                            }
+                        }
+
+                        // TODO update all galaxies
+                    }
+                }.mapKeys { it.key.removeSuffix(".json") }.mapValues { gson.fromJson(it.value, GalaxySpec::class.java) }.let { HashMap(it) }
                 try {
-                    lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config.galaxies["lobby"]!!)
+                    lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", galaxies["lobby"]!!)
                         .let { if (!Readiness.isPodReady(it)) kubernetesClient.waitReady(it) else it }
                         .let { proxy.registerServer(ServerInfo("galaxy-lobby", InetSocketAddress(it.status.podIP, 25565))) }
                 } catch (e: Exception) {
