@@ -56,7 +56,7 @@ class TabListUpdater : CoroutineScope by CoroutineScope(Dispatchers.Default + Su
         playerListCache = main.redisClient.getPlayers(number = 100).sortedBy { it.first.name }
 
         main.proxy.allPlayers.forEach { player ->
-            player.tabList.setHeaderAndFooter(tabHeader, tabFooter)
+            player.sendPlayerListHeaderAndFooter(tabHeader, tabFooter)
 
             // Cleanup old data
             player.tabList.entries.forEach {
