@@ -1,6 +1,6 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.6.0'
-    id "org.jetbrains.kotlin.kapt" version "1.6.0"
+    id 'org.jetbrains.kotlin.jvm' version '1.7.0'
+    id "org.jetbrains.kotlin.kapt" version "1.7.0"
     id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
@@ -11,22 +11,22 @@ repositories {
     mavenCentral()
     maven { url = "https://jitpack.io" }
     maven {
-        name 'velocity'
-        url 'https://nexus.velocitypowered.com/repository/maven-public'
+        name 'papermc'
+        url 'https://repo.papermc.io/repository/maven-public/'
     }
 }
 
 dependencies {
-    kapt 'com.velocitypowered:velocity-api:3.1.0'
-    compileOnly 'com.velocitypowered:velocity-api:3.0.1'
-    implementation 'io.fabric8:kubernetes-client:5.11.2'
-    implementation 'com.github.fkorotkov:k8s-kotlin-dsl:3.1.1'
-    implementation 'io.lettuce:lettuce-core:6.1.6.RELEASE'
-    implementation 'one.oktw:galaxy-lib:12a52a6f'
+    kapt 'com.velocitypowered:velocity-api:3.1.1'
+    compileOnly 'com.velocitypowered:velocity-api:3.1.1'
+    implementation 'io.fabric8:kubernetes-client:5.12.2'
+    implementation 'com.github.james58899:k8s-kotlin-dsl:6709c28a59'
+    implementation 'io.lettuce:lettuce-core:6.1.8.RELEASE'
+    implementation 'one.oktw:galaxy-lib:7fb749bc'
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "16"
+    kotlinOptions.jvmTarget = "17"
 }
 
 tasks.withType(AbstractArchiveTask) {
@@ -37,6 +37,13 @@ tasks.withType(AbstractArchiveTask) {
 shadowJar {
     zip64 true
     archiveClassifier.set('')
+    minimize {
+        exclude(dependency('io.fabric8:kubernetes-client:.*'))
+    }
+    exclude '*.aut'
+    exclude '*.properties'
+    exclude 'OSGI-INF'
+    exclude 'schema'
 }
 
 jar.enabled = false
