@@ -23,6 +23,7 @@ import one.oktw.galaxy.proxy.event.TabListUpdater
 import one.oktw.galaxy.proxy.kubernetes.KubernetesClient
 import one.oktw.galaxy.proxy.pubsub.Manager
 import one.oktw.galaxy.proxy.redis.RedisClient
+import one.oktw.galaxy.proxy.resourcepack.ResourcePackHelper
 import org.slf4j.Logger
 import java.net.InetSocketAddress
 import kotlin.system.exitProcess
@@ -109,6 +110,7 @@ class Main {
                 if (it.player.currentServer.isPresent || !this::lobby.isInitialized) return@register // Ignore exist player
 
                 it.result = ServerPreConnectEvent.ServerResult.allowed(lobby)
+                ResourcePackHelper.trySendResourcePack(it.player, "lobby")
             }
 
             // Connect back to lobby on disconnect from galaxies
@@ -117,6 +119,7 @@ class Main {
                     it.result = KickedFromServerEvent.DisconnectPlayer.create(it.serverKickReason.orElse(Component.empty()))
                 } else {
                     it.result = KickedFromServerEvent.RedirectPlayer.create(lobby, Component.empty())
+                    ResourcePackHelper.trySendResourcePack(it.player, "lobby")
                 }
             }
 

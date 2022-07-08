@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
 import one.oktw.galaxy.proxy.api.packet.*
+import one.oktw.galaxy.proxy.resourcepack.ResourcePackHelper
 import java.net.InetSocketAddress
 import java.util.*
 
@@ -102,6 +103,7 @@ class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + Supe
                         }
 
                         player.createConnectionRequest(server).fireAndForget()
+                        ResourcePackHelper.trySendResourcePack(player, "normal_galaxy")
                     }
                 }
             }
