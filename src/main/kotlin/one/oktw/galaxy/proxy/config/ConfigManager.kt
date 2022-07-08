@@ -56,8 +56,8 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
                     val galaxyName = file.fileName.toString().substringBeforeLast(".")
                     galaxies[galaxyName] = gson.fromJson(json, GalaxySpec::class.java)
                     GlobalScope.launch {
-                        val resourcePack = galaxies[galaxyName]?.let { spec -> ResourcePack.new(spec.ResourcePack) }
-                        if (resourcePack != null) galaxiesResourpacePack[galaxyName] = resourcePack
+                        val resourcePack = galaxies[galaxyName]?.let { spec -> ResourcePack.new(spec.ResourcePack) } ?: return@launch
+                        galaxiesResourpacePack[galaxyName] = resourcePack
                     }
                 }
             }
