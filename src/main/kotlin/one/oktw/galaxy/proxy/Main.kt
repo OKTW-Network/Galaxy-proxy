@@ -3,6 +3,7 @@ package one.oktw.galaxy.proxy
 import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.player.KickedFromServerEvent
+import com.velocitypowered.api.event.player.ServerPostConnectEvent
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.Plugin
@@ -110,7 +111,17 @@ class Main {
                 if (it.player.currentServer.isPresent || !this::lobby.isInitialized) return@register // Ignore exist player
 
                 it.result = ServerPreConnectEvent.ServerResult.allowed(lobby)
-                ResourcePackHelper.trySendResourcePack(it.player, "lobby")
+            }
+
+            @Suppress("UnstableApiUsage") proxy.eventManager.register(this, ServerPostConnectEvent::class.java) {
+                if (it.player.currentServer.get().serverInfo.name == "galaxy-lobby") {
+                    ResourcePackHelper.trySendResourcePack(it.player, "lobby")
+                } else {
+                    // TODO: Check Galaxy Type
+                    if (it.previousServer?.serverInfo?.name != "galaxy-lobby" && it.player.currentServer.get().serverInfo.name != "galaxy-lobby") return@register
+
+                    ResourcePackHelper.trySendResourcePack(it.player, "normal_galaxy")
+                }
             }
 
             // Connect back to lobby on disconnect from galaxies
@@ -119,7 +130,6 @@ class Main {
                     it.result = KickedFromServerEvent.DisconnectPlayer.create(it.serverKickReason.orElse(Component.empty()))
                 } else {
                     it.result = KickedFromServerEvent.RedirectPlayer.create(lobby, Component.empty())
-                    ResourcePackHelper.trySendResourcePack(it.player, "lobby")
                 }
             }
 
