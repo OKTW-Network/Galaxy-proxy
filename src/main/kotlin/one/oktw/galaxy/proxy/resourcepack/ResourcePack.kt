@@ -23,7 +23,6 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.io.InputStream
 import java.net.URI
 
 class ResourcePack private constructor(url: String) {
@@ -40,16 +39,12 @@ class ResourcePack private constructor(url: String) {
         this.hash = getHashFromUri(uri)
     }
 
-    suspend fun updateHash(url: String) {
-        this.uri = URI(url)
-        this.hash = withContext(IO) { getHashFromUri(uri) }
-    }
-
     @Throws(FileNotFoundException::class)
+    @Suppress("UnstableApiUsage", "DEPRECATION")
     private fun getHashFromUri(uri: URI): ByteArray {
         try {
             val hasher = Hashing.sha1().newHasher()
-            openStream(uri).use { input ->
+            uri.toURL().openStream().use { input ->
                 val buf = ByteArray(256)
                 while (true) {
                     val read = input.read(buf)
@@ -65,10 +60,5 @@ class ResourcePack private constructor(url: String) {
             ex.initCause(e)
             throw ex
         }
-    }
-
-    @Throws(IOException::class)
-    private fun openStream(uri: URI): InputStream {
-        return uri.toURL().openStream()
     }
 }
