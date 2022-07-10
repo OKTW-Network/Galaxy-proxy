@@ -3,6 +3,7 @@ package one.oktw.galaxy.proxy
 import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.player.KickedFromServerEvent
+import com.velocitypowered.api.event.player.ServerPostConnectEvent
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.plugin.Plugin
@@ -23,6 +24,7 @@ import one.oktw.galaxy.proxy.event.TabListUpdater
 import one.oktw.galaxy.proxy.kubernetes.KubernetesClient
 import one.oktw.galaxy.proxy.pubsub.Manager
 import one.oktw.galaxy.proxy.redis.RedisClient
+import one.oktw.galaxy.proxy.resourcepack.ResourcePackHelper
 import org.slf4j.Logger
 import java.net.InetSocketAddress
 import kotlin.system.exitProcess
@@ -109,6 +111,17 @@ class Main {
                 if (it.player.currentServer.isPresent || !this::lobby.isInitialized) return@register // Ignore exist player
 
                 it.result = ServerPreConnectEvent.ServerResult.allowed(lobby)
+            }
+
+            @Suppress("UnstableApiUsage") proxy.eventManager.register(this, ServerPostConnectEvent::class.java) {
+                if (it.player.currentServer.get().serverInfo.name == "galaxy-lobby") {
+                    ResourcePackHelper.trySendResourcePack(it.player, "lobby")
+                } else {
+                    // TODO: Check Galaxy Type
+                    if (it.previousServer?.serverInfo?.name != "galaxy-lobby") return@register
+
+                    ResourcePackHelper.trySendResourcePack(it.player, "normal_galaxy")
+                }
             }
 
             // Connect back to lobby on disconnect from galaxies

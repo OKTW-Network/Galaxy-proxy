@@ -1,14 +1,18 @@
 package one.oktw.galaxy.proxy.config
 
 import com.google.gson.Gson
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import one.oktw.galaxy.proxy.config.model.GalaxySpec
 import one.oktw.galaxy.proxy.config.model.ProxyConfig
 import one.oktw.galaxy.proxy.config.model.RedisConfig
+import one.oktw.galaxy.proxy.resourcepack.ResourcePack
 import java.io.InputStream
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.ConcurrentHashMap
 
 class ConfigManager(private val basePath: Path = Paths.get("config")) {
     private val gson = Gson()
@@ -18,6 +22,7 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
     lateinit var redisConfig: RedisConfig
         private set
     val galaxies = HashMap<String, GalaxySpec>()
+    val galaxiesResourcePack = ConcurrentHashMap<String, ResourcePack>()
 
     init {
         readConfig()
@@ -49,7 +54,11 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
                 if (Files.isDirectory(file) || !Files.isReadable(file)) return@forEach
 
                 Files.newBufferedReader(file).use { json ->
-                    galaxies[file.fileName.toString().substringBeforeLast(".")] = gson.fromJson(json, GalaxySpec::class.java)
+                    val galaxyName = file.fileName.toString().substringBeforeLast(".")
+                    galaxies[galaxyName] = gson.fromJson(json, GalaxySpec::class.java)
+                    GlobalScope.launch {
+                        galaxiesResourcePack[galaxyName] = galaxies[galaxyName]?.let { spec -> if (spec.ResourcePack.isNotBlank()) ResourcePack.new(spec.ResourcePack) else null } ?: return@launch
+                    }
                 }
             }
         }
