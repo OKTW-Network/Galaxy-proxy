@@ -6,7 +6,7 @@ import one.oktw.galaxy.proxy.Main.Companion.main
 class ResourcePackHelper {
     companion object{
         fun trySendResourcePack(player: Player, galaxy: String){
-            val resourcePack = main.config.galaxiesResourpacePack[galaxy] ?: return
+            val resourcePack = main.config.galaxiesResourcePack[galaxy] ?: return
             player.sendResourcePackOffer(
                 main.proxy.createResourcePackBuilder(resourcePack.uri.toString())
                     .setHash(resourcePack.hash)

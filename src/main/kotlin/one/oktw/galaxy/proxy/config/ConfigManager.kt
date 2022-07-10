@@ -21,7 +21,7 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
     lateinit var redisConfig: RedisConfig
         private set
     val galaxies = HashMap<String, GalaxySpec>()
-    val galaxiesResourpacePack = HashMap<String, ResourcePack>()
+    val galaxiesResourcePack = HashMap<String, ResourcePack>()
 
     init {
         readConfig()
@@ -56,7 +56,7 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
                     val galaxyName = file.fileName.toString().substringBeforeLast(".")
                     galaxies[galaxyName] = gson.fromJson(json, GalaxySpec::class.java)
                     GlobalScope.launch {
-                        galaxiesResourpacePack[galaxyName] = galaxies[galaxyName]?.let { spec -> if (spec.ResourcePack.isNotBlank()) ResourcePack.new(spec.ResourcePack) else null } ?: return@launch
+                        galaxiesResourcePack[galaxyName] = galaxies[galaxyName]?.let { spec -> if (spec.ResourcePack.isNotBlank()) ResourcePack.new(spec.ResourcePack) else null } ?: return@launch
                     }
                 }
             }
