@@ -45,7 +45,7 @@ class ResourcePack private constructor(url: String) {
         try {
             val hasher = Hashing.sha1().newHasher()
             uri.toURL().openStream().use { input ->
-                val buf = ByteArray(256)
+                val buf = ByteArray(8192)
                 while (true) {
                     val read = input.read(buf)
                     if (read <= 0) {
