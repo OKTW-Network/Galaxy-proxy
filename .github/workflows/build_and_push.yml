@@ -70,17 +70,10 @@ jobs:
   
       - name: pull cache
         run: |
-          docker pull $REGISTRY/$IMAGE_NAME:build-cache || true
           docker pull $REGISTRY/$IMAGE_NAME:latest || true
-  
-      - name: build cache
-        if: github.ref == 'refs/heads/master'
-        run: |
-          docker build --pull --cache-from $REGISTRY/$IMAGE_NAME:build-cache -t $REGISTRY/$IMAGE_NAME:build-cache --target builder .
-          docker push $REGISTRY_IMAGE:build-cache
     
       - name: build
-        run: docker build --cache-from $REGISTRY/$IMAGE_NAME:build-cache --cache-from $REGISTRY/$IMAGE_NAME:latest -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
+        run: docker build --cache-from $REGISTRY/$IMAGE_NAME:latest -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
   
       - name: push
         run: docker push $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
