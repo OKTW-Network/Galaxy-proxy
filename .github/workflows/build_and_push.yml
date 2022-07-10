@@ -1,0 +1,79 @@
+name: build and push
+
+on: [ push, pull_request, workflow_dispatch ]
+
+jobs:
+  Build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: caches-${{ hashFiles('build.gradle', 'gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: |
+            caches-
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt-openj9'
+          java-version: 17
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Upload-Artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: artifact
+          path: build/libs/
+
+  Docker-image:
+    needs: Build
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    env:
+      DOCKER_BUILDKIT: 1
+      REGISTRY: ghcr.io
+    steps:
+      - name: Env
+        shell: bash
+        run:  |
+          echo IMAGE_TAG=$([ "$GITHUB_REF" = "refs/heads/master" ] && echo "latest" || ([ "$GITHUB_EVENT_NAME" = 'pull_request' ] && echo pr-${{github.event.pull_request.number}} || echo ${GITHUB_REF##*/})) >> $GITHUB_ENV
+          echo IMAGE_NAME=${GITHUB_REPOSITORY,,} >>${GITHUB_ENV}
+          
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - uses: actions/download-artifact@v1
+        with:
+          name: artifact
+          path: build/libs/
+
+      - name: Copy build file
+        run: cp build/libs/galaxy-proxy-1.0-SNAPSHOT.jar docker/plugins
+        
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+  
+      - name: pull cache
+        run: |
+          docker pull $REGISTRY/$IMAGE_NAME:latest || true
+    
+      - name: build
+        run: docker build --cache-from $REGISTRY/$IMAGE_NAME:latest -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
+  
+      - name: push
+        run: docker push $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
