@@ -12,6 +12,7 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.ConcurrentHashMap
 
 class ConfigManager(private val basePath: Path = Paths.get("config")) {
     private val gson = Gson()
@@ -21,7 +22,7 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
     lateinit var redisConfig: RedisConfig
         private set
     val galaxies = HashMap<String, GalaxySpec>()
-    val galaxiesResourcePack = HashMap<String, ResourcePack>()
+    val galaxiesResourcePack = ConcurrentHashMap<String, ResourcePack>()
 
     init {
         readConfig()
