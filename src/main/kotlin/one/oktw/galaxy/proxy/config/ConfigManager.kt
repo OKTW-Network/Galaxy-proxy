@@ -20,11 +20,6 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
         readConfig()
     }
 
-    // TODO reload command
-    fun reloadAll() {
-        reload()
-    }
-
     fun reload() {
         readConfig()
     }

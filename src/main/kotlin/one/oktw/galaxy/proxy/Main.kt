@@ -26,7 +26,6 @@ import one.oktw.galaxy.proxy.event.TabListUpdater
 import one.oktw.galaxy.proxy.kubernetes.KubernetesClient
 import one.oktw.galaxy.proxy.pubsub.Manager
 import one.oktw.galaxy.proxy.redis.RedisClient
-import one.oktw.galaxy.proxy.resourcepack.ResourcePackHelper
 import org.slf4j.Logger
 import java.net.InetSocketAddress
 import kotlin.system.exitProcess
@@ -149,14 +148,16 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
                 it.result = ServerPreConnectEvent.ServerResult.allowed(lobby)
             }
 
-            @Suppress("UnstableApiUsage") proxy.eventManager.register(this, ServerPostConnectEvent::class.java) {
+            @Suppress("UnstableApiUsage")
+            proxy.eventManager.register(this, ServerPostConnectEvent::class.java) {
+                val player = it.player
                 if (it.player.currentServer.get().serverInfo.name == "galaxy-lobby") {
-                    ResourcePackHelper.trySendResourcePack(it.player, "lobby")
+                    galaxies["lobby"]?.getResourcePack(proxy).let(player::sendResourcePackOffer)
                 } else {
                     // TODO: Check Galaxy Type
                     if (it.previousServer?.serverInfo?.name != "galaxy-lobby") return@register
 
-                    ResourcePackHelper.trySendResourcePack(it.player, "normal_galaxy")
+                    galaxies["normal_galaxy"]?.getResourcePack(proxy).let(player::sendResourcePackOffer)
                 }
             }
 
