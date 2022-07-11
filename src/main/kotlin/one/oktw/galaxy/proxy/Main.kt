@@ -10,7 +10,7 @@ import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.RegisteredServer
 import com.velocitypowered.api.proxy.server.ServerInfo
-import io.fabric8.kubernetes.client.internal.readiness.Readiness
+import io.fabric8.kubernetes.client.readiness.Readiness
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -94,7 +94,7 @@ class Main {
             proxy.eventManager.register(this, TabListUpdater())
             proxy.eventManager.register(this, GalaxyPacket())
 
-            // Start lobby TODO auto scale lobby
+            // Start lobby TODO auto-scale lobby
             GlobalScope.launch {
                 try {
                     lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config.galaxies["lobby"]!!)
