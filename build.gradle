@@ -21,7 +21,7 @@ dependencies {
     compileOnly 'com.velocitypowered:velocity-api:3.1.1'
     implementation 'io.fabric8:kubernetes-client:5.12.2'
     implementation 'com.github.james58899:k8s-kotlin-dsl:6709c28a59'
-    implementation 'io.lettuce:lettuce-core:6.1.8.RELEASE'
+    implementation 'io.lettuce:lettuce-core:6.2.0.RELEASE'
     implementation 'one.oktw:galaxy-lib:7fb749bc'
 }
 
