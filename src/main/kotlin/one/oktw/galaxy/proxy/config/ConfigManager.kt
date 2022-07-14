@@ -2,6 +2,7 @@ package one.oktw.galaxy.proxy.config
 
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
+import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.config.model.GalaxySpec
 import one.oktw.galaxy.proxy.config.model.ProxyConfig
 import one.oktw.galaxy.proxy.config.model.RedisConfig
@@ -56,7 +57,11 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
                     val galaxyName = file.fileName.toString().substringBeforeLast(".")
                     galaxies[galaxyName] = gson.fromJson(json, GalaxySpec::class.java)
                     runBlocking {
-                        galaxiesResourcePack[galaxyName] = galaxies[galaxyName]?.let { spec -> if (spec.ResourcePack.isNotBlank()) ResourcePack.new(spec.ResourcePack) else null } ?: return@runBlocking
+                        try {
+                            galaxiesResourcePack[galaxyName] = galaxies[galaxyName]?.let { spec -> if (spec.ResourcePack.isNotBlank()) ResourcePack.new(spec.ResourcePack) else null } ?: return@runBlocking
+                        } catch (e: Exception) {
+                            main.logger.error("Resource pack load failed!", e)
+                        }
                     }
                 }
             }
