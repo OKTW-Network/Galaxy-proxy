@@ -4,7 +4,7 @@ import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.PluginMessageEvent
 import com.velocitypowered.api.proxy.ServerConnection
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.kyori.adventure.text.Component
@@ -21,9 +21,8 @@ import one.oktw.galaxy.proxy.api.packet.Packet
 import one.oktw.galaxy.proxy.model.ChatData
 import one.oktw.galaxy.proxy.model.ChatResponse
 import java.util.*
-import kotlin.collections.HashMap
 
-class ChatExchange(private val topic: String) {
+class ChatExchange(private val topic: String) : CoroutineScope by main {
     companion object {
         private const val MESSAGE_TIMEOUT = 2000L
 
@@ -82,7 +81,7 @@ class ChatExchange(private val topic: String) {
 
         if (packet.requireCallback && packet.id != null) {
             ackMaps[packet.id as UUID] = packet
-            GlobalScope.launch {
+            launch {
                 delay(MESSAGE_TIMEOUT)
                 ackMaps.remove(packet.id!!)
 

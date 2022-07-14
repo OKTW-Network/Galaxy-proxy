@@ -4,20 +4,15 @@ import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.connection.DisconnectEvent
 import com.velocitypowered.api.event.connection.PostLoginEvent
 import com.velocitypowered.api.event.proxy.ProxyPingEvent
-import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.proxy.server.ServerPing
 import kotlinx.coroutines.*
 import one.oktw.galaxy.proxy.Main.Companion.main
 import java.util.concurrent.TimeUnit
 
-class PlayerListWatcher(private val protocolVersion: Int) : CoroutineScope {
-    private val job = SupervisorJob()
-    private var updatePlayer = true
-    override val coroutineContext = Dispatchers.IO + job
-
+class PlayerListWatcher(private val protocolVersion: Int) : CoroutineScope by main {
     init {
         launch {
-            while (updatePlayer) {
+            while (isActive) {
                 delay(TimeUnit.MINUTES.toMillis(1))
                 forceUpdatePlayers()
             }
@@ -32,17 +27,6 @@ class PlayerListWatcher(private val protocolVersion: Int) : CoroutineScope {
     @Subscribe
     fun onPlayerDisconnect(event: DisconnectEvent) {
         launch { main.redisClient.delPlayer(event.player.username) }
-    }
-
-    @Subscribe
-    fun onShutdown(event: ProxyShutdownEvent) {
-        updatePlayer = false
-
-        runBlocking {
-            main.proxy.allPlayers.forEach { main.redisClient.delPlayer(it.username) }
-
-            job.cancelAndJoin()
-        }
     }
 
     @Subscribe

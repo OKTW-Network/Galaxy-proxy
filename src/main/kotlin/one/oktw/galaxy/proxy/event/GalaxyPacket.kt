@@ -10,8 +10,6 @@ import com.velocitypowered.api.proxy.server.ServerInfo
 import io.fabric8.kubernetes.client.KubernetesClientTimeoutException
 import io.fabric8.kubernetes.client.readiness.Readiness
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.api.ProxyAPI
@@ -19,7 +17,7 @@ import one.oktw.galaxy.proxy.api.packet.*
 import java.net.InetSocketAddress
 import java.util.*
 
-class GalaxyPacket : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJob()) {
+class GalaxyPacket : CoroutineScope by main {
     companion object {
         val MESSAGE_CHANNEL_ID: MinecraftChannelIdentifier = MinecraftChannelIdentifier.create("galaxy", "proxy")
     }
