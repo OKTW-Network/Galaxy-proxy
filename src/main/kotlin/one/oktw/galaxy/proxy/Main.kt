@@ -37,8 +37,8 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
             private set
     }
 
-    val config = ConfigManager()
-
+    lateinit var config: ConfigManager
+        private set
     lateinit var lobby: RegisteredServer
         private set
     lateinit var kubernetesClient: KubernetesClient
@@ -60,6 +60,7 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
             main = this
             this.proxy = proxy
             this.logger = logger
+            this.config = ConfigManager()
             this.kubernetesClient = KubernetesClient()
             this.redisClient = RedisClient()
 
