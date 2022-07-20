@@ -23,7 +23,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          distribution: 'adopt-openj9'
+          distribution: 'temurin'
           java-version: 17
 
       - name: Build with Gradle
