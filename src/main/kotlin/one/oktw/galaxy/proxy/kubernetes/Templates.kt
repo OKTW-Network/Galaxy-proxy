@@ -36,7 +36,17 @@ object Templates {
         requireNotNull(spec.Storage) { "Storage spec undefined!" }
 
         return newPod {
-            metadata { this.name = name }
+            metadata {
+                val type = spec.Type.name.lowercase()
+                this.name = name
+                this.labels = buildMap {
+                    put("app.kubernetes.io/name", type)
+                    put("app.kubernetes.io/instance", "${type}-${name}")
+                    put("app.kubernetes.io/component", "server")
+                    put("app.kubernetes.io/part-of", "galaxy")
+                    put("app.kubernetes.io/managed-by", "galaxy-proxy")
+                }
+            }
             spec {
                 imagePullSecrets = listOf(LocalObjectReference(spec.PullSecret))
                 securityContext { fsGroup = 1000 }
@@ -95,6 +105,18 @@ object Templates {
                                 spec.Resource.CPULimit?.let { Pair("cpu", Quantity(it)) },
                                 spec.Resource.MemoryLimit?.let { Pair("memory", Quantity(it)) }
                             ).toMap()
+                        }
+                    }
+                })
+
+                topologySpreadConstraints.add(newTopologySpreadConstraint {
+                    maxSkew = 1
+                    topologyKey = "kubernetes.io/hostname"
+                    whenUnsatisfiable = "ScheduleAnyway"
+                    labelSelector = newLabelSelector {
+                        matchLabels = buildMap {
+                            put("app.kubernetes.io/part-of", "galaxy")
+                            put("app.kubernetes.io/component", "server")
                         }
                     }
                 })

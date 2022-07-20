@@ -1,4 +1,5 @@
-FROM ibm-semeru-runtimes:open-17-jre
+FROM eclipse-temurin:17-jre-alpine
+RUN apk add --no-cache bash
 RUN mkdir /app && chown 1000:100 /app
 USER 1000
 WORKDIR /app

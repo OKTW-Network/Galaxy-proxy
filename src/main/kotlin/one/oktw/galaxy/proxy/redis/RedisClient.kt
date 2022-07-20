@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.velocitypowered.api.proxy.Player
 import com.velocitypowered.api.util.GameProfile
+import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.RedisClient
 import io.lettuce.core.ScanArgs
 import io.lettuce.core.api.coroutines
@@ -11,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import one.oktw.galaxy.proxy.Main.Companion.main
 import java.util.*
 
+@OptIn(ExperimentalLettuceCoroutinesApi::class)
 class RedisClient {
     companion object {
         private const val DB_PLAYERS = 0

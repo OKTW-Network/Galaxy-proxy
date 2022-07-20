@@ -6,14 +6,13 @@ import com.velocitypowered.api.event.player.KickedFromServerEvent
 import com.velocitypowered.api.event.player.ServerPostConnectEvent
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.RegisteredServer
 import com.velocitypowered.api.proxy.server.ServerInfo
-import io.fabric8.kubernetes.client.internal.readiness.Readiness
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import io.fabric8.kubernetes.client.readiness.Readiness
+import kotlinx.coroutines.*
 import net.kyori.adventure.text.Component
 import one.oktw.galaxy.proxy.command.Lobby
 import one.oktw.galaxy.proxy.config.ConfigManager
@@ -30,15 +29,16 @@ import java.net.InetSocketAddress
 import kotlin.system.exitProcess
 
 @Plugin(id = "galaxy-proxy", name = "Galaxy proxy side plugin", version = "1.0-SNAPSHOT")
-class Main {
+class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJob()) {
     companion object {
-        const val MESSAGE_TOPIC = "chat"
+        private const val MESSAGE_TOPIC = "chat"
+
         lateinit var main: Main
             private set
     }
 
-    val config = ConfigManager()
-
+    lateinit var config: ConfigManager
+        private set
     lateinit var lobby: RegisteredServer
         private set
     lateinit var kubernetesClient: KubernetesClient
@@ -51,8 +51,8 @@ class Main {
         private set
     lateinit var chatExchange: ChatExchange
         private set
-
     lateinit var manager: Manager
+        private set
 
     @Inject
     fun init(proxy: ProxyServer, logger: Logger) {
@@ -60,7 +60,7 @@ class Main {
             main = this
             this.proxy = proxy
             this.logger = logger
-
+            this.config = ConfigManager()
             this.kubernetesClient = KubernetesClient()
             this.redisClient = RedisClient()
 
@@ -94,8 +94,8 @@ class Main {
             proxy.eventManager.register(this, TabListUpdater())
             proxy.eventManager.register(this, GalaxyPacket())
 
-            // Start lobby TODO auto scale lobby
-            GlobalScope.launch {
+            // Start lobby TODO auto-scale lobby
+            launch {
                 try {
                     lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", config.galaxies["lobby"]!!)
                         .let { if (!Readiness.isPodReady(it)) kubernetesClient.waitReady(it) else it }
@@ -139,5 +139,10 @@ class Main {
             logger.error("Failed to init the proxy!", err)
             exitProcess(1)
         }
+    }
+
+    @Subscribe
+    fun onProxyShutdown(event: ProxyShutdownEvent) {
+        runBlocking { coroutineContext.job.cancelAndJoin() }
     }
 }

@@ -1,8 +1,8 @@
 package one.oktw.galaxy.proxy.config
 
 import com.google.gson.Gson
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.config.model.GalaxySpec
 import one.oktw.galaxy.proxy.config.model.ProxyConfig
 import one.oktw.galaxy.proxy.config.model.RedisConfig
@@ -26,7 +26,7 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
 
     init {
         readConfig()
-        readGalaxies(FileSystems.newFileSystem(this::class.java.getResource("/config").toURI(), emptyMap<String, Any>()).getPath("/config/galaxies"))
+        readGalaxies(FileSystems.newFileSystem(this::class.java.getResource("/config")!!.toURI(), emptyMap<String, Any>()).getPath("/config/galaxies"))
         readGalaxies(basePath.resolve("galaxies"))
     }
 
@@ -56,8 +56,12 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
                 Files.newBufferedReader(file).use { json ->
                     val galaxyName = file.fileName.toString().substringBeforeLast(".")
                     galaxies[galaxyName] = gson.fromJson(json, GalaxySpec::class.java)
-                    GlobalScope.launch {
-                        galaxiesResourcePack[galaxyName] = galaxies[galaxyName]?.let { spec -> if (spec.ResourcePack.isNotBlank()) ResourcePack.new(spec.ResourcePack) else null } ?: return@launch
+                    runBlocking {
+                        try {
+                            galaxiesResourcePack[galaxyName] = galaxies[galaxyName]?.let { spec -> if (spec.ResourcePack.isNotBlank()) ResourcePack.new(spec.ResourcePack) else null } ?: return@runBlocking
+                        } catch (e: Exception) {
+                            main.logger.error("Resource pack load failed!", e)
+                        }
                     }
                 }
             }
@@ -70,7 +74,7 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
         return if (Files.isReadable(file)) {
             Files.newInputStream(file)
         } else {
-            this::class.java.getResourceAsStream("/config/$name")
+            this::class.java.getResourceAsStream("/config/$name")!!
         }
     }
 }

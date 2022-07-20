@@ -1,6 +1,6 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.7.0'
-    id "org.jetbrains.kotlin.kapt" version "1.7.0"
+    id 'org.jetbrains.kotlin.jvm' version '1.7.10'
+    id "org.jetbrains.kotlin.kapt" version "1.7.10"
     id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
@@ -19,10 +19,12 @@ repositories {
 dependencies {
     kapt 'com.velocitypowered:velocity-api:3.1.1'
     compileOnly 'com.velocitypowered:velocity-api:3.1.1'
-    implementation 'io.fabric8:kubernetes-client:5.12.2'
-    implementation 'com.github.james58899:k8s-kotlin-dsl:6709c28a59'
+    implementation 'io.fabric8:kubernetes-client:6.0.0-RC1'
+    implementation 'io.fabric8:kubernetes-httpclient-okhttp:6.0.0-RC1'
+    implementation 'com.github.fkorotkov:k8s-kotlin-dsl:3.2.0'
     implementation 'io.lettuce:lettuce-core:6.2.0.RELEASE'
-    implementation 'one.oktw:galaxy-lib:7fb749bc'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactive' // lettuce need this
+    implementation 'one.oktw:galaxy-lib:56fb909a'
 }
 
 compileKotlin {
@@ -35,7 +37,6 @@ tasks.withType(AbstractArchiveTask) {
 }
 
 shadowJar {
-    zip64 true
     archiveClassifier.set('')
     minimize {
         exclude(dependency('io.fabric8:kubernetes-client:.*'))

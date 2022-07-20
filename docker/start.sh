@@ -3,4 +3,4 @@
 [[ -e config/velocity.toml ]] && cp -f config/velocity.toml velocity.toml
 
 # Start
-exec java -jar velocity.jar
+exec java -XX:+UseShenandoahGC -jar velocity.jar
