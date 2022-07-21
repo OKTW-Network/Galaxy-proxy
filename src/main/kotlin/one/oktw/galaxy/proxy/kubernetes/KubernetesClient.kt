@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.client.WatcherException
 import io.fabric8.kubernetes.client.okhttp.OkHttpClientFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import one.oktw.galaxy.proxy.Main.Companion.main
@@ -17,9 +18,6 @@ import one.oktw.galaxy.proxy.config.model.GalaxySpec
 import one.oktw.galaxy.proxy.kubernetes.Templates.galaxy
 import one.oktw.galaxy.proxy.kubernetes.Templates.volume
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 class KubernetesClient {
     private val client = KubernetesClientBuilder().withHttpClientFactory(OkHttpClientFactory()).build() // TODO configurable api URL
@@ -40,19 +38,9 @@ class KubernetesClient {
     }
 
     suspend fun stopGalaxy(name: String) = withContext(IO) {
-        suspendCoroutine<Unit> {
-            val pod = client.pods().withName(name)
-            pod.watch(object : Watcher<Pod> {
-                override fun eventReceived(action: Watcher.Action, resource: Pod?) {
-                    if (action == Watcher.Action.DELETED) it.resume(Unit)
-                }
-
-                override fun onClose(cause: WatcherException) {
-                    it.resumeWithException(cause)
-                }
-            })
-            pod.delete()
-        }
+        val pod = client.pods().withName(name)
+        pod.delete()
+        pod.informOnCondition { it.filterNotNull().isEmpty() }.asDeferred().await()
     }
 
     suspend fun getOrCreateVolume(name: String, spec: GalaxySpec.GalaxyStorage): PersistentVolumeClaim {
