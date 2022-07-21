@@ -69,7 +69,7 @@ class GalaxyPacket : CoroutineScope by main {
                             .let { source.sendPluginMessage(MESSAGE_CHANNEL_ID, it) }
 
                         // Start galaxy
-                        galaxy = kubernetes.getOrCreateGalaxyAndVolume(id, main.config.galaxies["normal_galaxy"]!!) // TODO multi type
+                        galaxy = kubernetes.getOrCreateGalaxyAndVolume(id, main.galaxies["normal_galaxy"]!!) // TODO multi type
 
                         // Send packet to server: Galaxy is starting
                         ProxyAPI.encode(CreateGalaxy.CreateProgress(data.uuid, ProgressStage.Starting))
