@@ -28,6 +28,8 @@ class KubernetesClient {
         return getGalaxy(name) ?: createGalaxy(name, spec)
     }
 
+    fun createLeaderElector(name: String) = LeaderElector(name, client)
+
     suspend fun getGalaxy(name: String): Pod? = withContext(IO) {
         client.pods().withName(name).get()
     }

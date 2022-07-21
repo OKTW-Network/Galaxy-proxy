@@ -13,6 +13,7 @@ import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.proxy.ProxyServer
 import com.velocitypowered.api.proxy.server.RegisteredServer
 import com.velocitypowered.api.proxy.server.ServerInfo
+import io.fabric8.kubernetes.api.model.Pod
 import io.fabric8.kubernetes.client.readiness.Readiness
 import kotlinx.coroutines.*
 import net.kyori.adventure.text.Component
@@ -101,6 +102,7 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
 
             // Start lobby TODO auto-scale lobby
             launch {
+                val election = kubernetesClient.createLeaderElector("lobby")
                 galaxies = kubernetesClient.getGalaxiesConfig { config ->
                     config.forEach { (name, string) ->
                         val type = name.removeSuffix(".json")
@@ -116,13 +118,21 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
                         if (type == "lobby") {
                             kubernetesClient.stopGalaxy("galaxy-lobby")
                             try {
-                                lobby = kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", galaxies["lobby"]!!)
-                                    .let { if (!Readiness.isPodReady(it)) kubernetesClient.waitReady(it) else it }
-                                    .let {
-                                        proxy.unregisterServer(lobby.serverInfo)
-                                        proxy.registerServer(ServerInfo("galaxy-lobby", InetSocketAddress(it.status.podIP, 25565)))
+                                var pod: Pod?
+                                do {
+                                    pod = if (election.isLeader) {
+                                        kubernetesClient.getOrCreateGalaxyAndVolume("galaxy-lobby", galaxies["lobby"]!!)
+                                    } else {
+                                        delay(1000) // Wait leader create lobby
+                                        kubernetesClient.getGalaxy("galaxy-lobby")
                                     }
+                                } while (pod == null)
+                                lobby = pod.let { if (!Readiness.isPodReady(it)) kubernetesClient.waitReady(it) else it }.let {
+                                    proxy.unregisterServer(lobby.serverInfo)
+                                    proxy.registerServer(ServerInfo("galaxy-lobby", InetSocketAddress(it.status.podIP, 25565)))
+                                }
                             } catch (e: Exception) {
+                                election.stopElection()
                                 logger.error("Failed create lobby.", e)
                                 exitProcess(1)
                             }
