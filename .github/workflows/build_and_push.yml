@@ -67,13 +67,9 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-  
-      - name: pull cache
-        run: |
-          docker pull $REGISTRY/$IMAGE_NAME:latest || true
     
       - name: build
-        run: docker build --cache-from $REGISTRY/$IMAGE_NAME:latest -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
+        run: docker build --build-arg BUILDKIT_INLINE_CACHE=1 --pull --cache-from $REGISTRY/$IMAGE_NAME:latest -t $REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
   
       - name: push
         run: docker push $REGISTRY/$IMAGE_NAME:$IMAGE_TAG
