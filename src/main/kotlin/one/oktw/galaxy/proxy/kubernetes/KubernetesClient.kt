@@ -27,7 +27,7 @@ class KubernetesClient {
 
     suspend fun createGalaxy(name: String, spec: GalaxySpec): Pod = withContext(IO) {
         getOrCreateVolume(name, spec.Storage!!)
-        client.resource(galaxy(name, spec)).createOrReplace()
+        client.resource(galaxy(name, spec)).serverSideApply()
     }
 
     suspend fun getOrCreateVolume(name: String, spec: GalaxySpec.GalaxyStorage): PersistentVolumeClaim {
