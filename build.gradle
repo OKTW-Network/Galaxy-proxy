@@ -22,7 +22,7 @@ dependencies {
     implementation 'io.fabric8:kubernetes-client:6.5.0'
     implementation 'io.fabric8:kubernetes-httpclient-okhttp:6.5.0'
     implementation 'com.github.fkorotkov:k8s-kotlin-dsl:3.2.0'
-    implementation 'io.lettuce:lettuce-core:6.2.3.RELEASE'
+    implementation 'io.lettuce:lettuce-core:6.2.4.RELEASE'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactive' // lettuce need this
     implementation 'one.oktw:galaxy-lib:ff884e3f'
 }
