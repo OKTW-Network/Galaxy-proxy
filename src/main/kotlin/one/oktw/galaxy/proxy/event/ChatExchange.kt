@@ -131,7 +131,7 @@ class ChatExchange(private val topic: String) : CoroutineScope by main {
                             if (target in it) {
                                 if (event.data.server != playerSource && textComponent is TranslatableComponent) {
                                     val newText = Component.translatable().key(textComponent.key())
-                                        .args(textComponent.args())
+                                        .arguments(textComponent.arguments())
                                         .style(Style.style().color(NamedTextColor.GRAY).build())
                                         .append(textComponent.children())
                                         .build()
