@@ -1,6 +1,6 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.9.10'
-    id "org.jetbrains.kotlin.kapt" version "1.9.10"
+    id 'org.jetbrains.kotlin.jvm' version '1.9.22'
+    id "org.jetbrains.kotlin.kapt" version "1.9.22"
     id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
@@ -14,17 +14,21 @@ repositories {
         name 'papermc'
         url 'https://repo.papermc.io/repository/maven-public/'
     }
+    maven {
+        name 'adventure'
+        url 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+    }
 }
 
 dependencies {
-    kapt 'com.velocitypowered:velocity-api:3.2.0-SNAPSHOT'
-    compileOnly 'com.velocitypowered:velocity-api:3.2.0-SNAPSHOT'
-    implementation 'io.fabric8:kubernetes-client:6.8.1'
-    implementation 'io.fabric8:kubernetes-httpclient-okhttp:6.8.1'
+    kapt 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
+    compileOnly 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
+    implementation 'io.fabric8:kubernetes-client:6.9.2'
+    implementation 'io.fabric8:kubernetes-httpclient-okhttp:6.9.2'
     implementation 'com.github.fkorotkov:k8s-kotlin-dsl:3.3.0'
-    implementation 'io.lettuce:lettuce-core:6.2.6.RELEASE'
+    implementation 'io.lettuce:lettuce-core:6.3.0.RELEASE'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactive' // lettuce need this
-    implementation 'one.oktw:galaxy-lib:adc1ed90'
+    implementation 'one.oktw:galaxy-lib:9a964eaf'
 }
 
 compileKotlin {
