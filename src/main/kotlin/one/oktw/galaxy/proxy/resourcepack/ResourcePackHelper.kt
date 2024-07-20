@@ -10,12 +10,11 @@ class ResourcePackHelper {
             val resourcePack = main.config.galaxiesResourcePack[galaxy] ?: return
             // workaround Minecraft 1.20.3 not auto unload old resource pack
             try {
-                val packet = Class.forName("com.velocitypowered.proxy.protocol.packet.RemoveResourcePack").getConstructor().newInstance()
+                val packet = Class.forName("com.velocitypowered.proxy.protocol.packet.RemoveResourcePackPacket").getConstructor().newInstance()
                 player.sendPacket(packet)
             } catch (e: Exception) {
                 main.logger.error("Send remove resource pack packet error.", e)
             }
-
             player.sendResourcePackOffer(
                 main.proxy.createResourcePackBuilder(resourcePack.uri.toString())
                     .setHash(resourcePack.hash)
