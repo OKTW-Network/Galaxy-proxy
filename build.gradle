@@ -1,7 +1,9 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.9.22'
-    id "org.jetbrains.kotlin.kapt" version "1.9.22"
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'org.jetbrains.kotlin.jvm' version '2.0.10'
+    id "org.jetbrains.kotlin.kapt" version "2.0.10"
+    id 'com.gradleup.shadow' version '8.3.0'
 }
 
 group 'one.oktw'
@@ -23,16 +25,16 @@ repositories {
 dependencies {
     kapt 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
     compileOnly 'com.velocitypowered:velocity-api:3.3.0-SNAPSHOT'
-    implementation 'io.fabric8:kubernetes-client:6.9.2'
-    implementation 'io.fabric8:kubernetes-httpclient-okhttp:6.9.2'
+    implementation 'io.fabric8:kubernetes-client:6.13.3'
+    implementation 'io.fabric8:kubernetes-httpclient-okhttp:6.13.3'
     implementation 'com.github.fkorotkov:k8s-kotlin-dsl:3.3.0'
-    implementation 'io.lettuce:lettuce-core:6.3.0.RELEASE'
+    implementation 'io.lettuce:lettuce-core:6.4.0.RELEASE'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactive' // lettuce need this
-    implementation 'one.oktw:galaxy-lib:9a964eaf'
+    implementation 'one.oktw:galaxy-lib:7376fcdf'
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = "17"
+    compilerOptions.jvmTarget = JvmTarget.JVM_21
 }
 
 tasks.withType(AbstractArchiveTask).configureEach {
