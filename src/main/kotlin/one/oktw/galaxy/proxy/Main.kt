@@ -2,6 +2,7 @@ package one.oktw.galaxy.proxy
 
 import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
+import com.velocitypowered.api.event.connection.DisconnectEvent
 import com.velocitypowered.api.event.player.KickedFromServerEvent
 import com.velocitypowered.api.event.player.ServerPostConnectEvent
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
@@ -53,6 +54,7 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
         private set
     lateinit var manager: Manager
         private set
+    lateinit var resourcePackHelper: ResourcePackHelper
 
     @Inject
     fun init(proxy: ProxyServer, logger: Logger) {
@@ -63,6 +65,7 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
             this.config = ConfigManager()
             this.kubernetesClient = KubernetesClient()
             this.redisClient = RedisClient()
+            this.resourcePackHelper = ResourcePackHelper()
 
             manager = Manager(config.redisConfig.URI, config.redisConfig.PubSubPrefix)
             manager.subscribe(MESSAGE_TOPIC)
@@ -113,14 +116,20 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
                 it.result = ServerPreConnectEvent.ServerResult.allowed(lobby)
             }
 
+            // Remove player on disconnect
+            proxy.eventManager.register(this, DisconnectEvent::class.java) {
+                this.resourcePackHelper.removePlayer(it.player)
+            }
+
+            // Update resourcepacks
             @Suppress("UnstableApiUsage") proxy.eventManager.register(this, ServerPostConnectEvent::class.java) {
                 // TODO: Get Galaxy Type
                 if (it.player.currentServer.get().serverInfo.name == "galaxy-lobby") {
-                    ResourcePackHelper.updatePlayerResourcePacks(it.player, "lobby")
+                    this.resourcePackHelper.updatePlayerResourcePacks(it.player, "lobby")
                 } else {
                     if (it.previousServer?.serverInfo?.name != "galaxy-lobby") return@register
 
-                    ResourcePackHelper.updatePlayerResourcePacks(it.player, "normal_galaxy")
+                    this.resourcePackHelper.updatePlayerResourcePacks(it.player, "normal_galaxy")
                 }
             }
 
