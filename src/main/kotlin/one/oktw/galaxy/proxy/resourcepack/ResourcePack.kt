@@ -19,8 +19,10 @@
 package one.oktw.galaxy.proxy.resourcepack
 
 import com.google.common.hash.Hashing
+import com.velocitypowered.api.proxy.player.ResourcePackInfo
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
+import one.oktw.galaxy.proxy.Main.Companion.main
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.URI
@@ -32,12 +34,17 @@ class ResourcePack private constructor(url: String) {
 
     var uri = URI(url)
         private set
-    var hash:ByteArray
+    var hash: ByteArray
         private set
 
     init {
         this.hash = getHashFromUri(uri)
     }
+
+    fun packInfo(): ResourcePackInfo = main.proxy.createResourcePackBuilder(this.uri.toString())
+        .setHash(this.hash)
+        .setShouldForce(true)
+        .build()
 
     @Throws(FileNotFoundException::class)
     @Suppress("UnstableApiUsage", "DEPRECATION")
