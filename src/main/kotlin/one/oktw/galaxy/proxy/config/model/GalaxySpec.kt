@@ -4,9 +4,7 @@ data class GalaxySpec(
     val Image: String,
     val PullSecret: String,
     val Type: GalaxyType,
-    // List of resource pack keys (defined with resource_packs.json) to apply in order (first item applies first).
-    // In Minecraft version prior to 1.20.2, only the last resource pack will be applied.
-    val ResourcePacks: List<String>,
+    val ResourcePacks: Set<String>,
     val Resource: GalaxyResource? = null,
     val Storage: GalaxyStorage? = null
 ) {
