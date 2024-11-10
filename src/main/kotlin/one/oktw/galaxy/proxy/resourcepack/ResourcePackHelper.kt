@@ -17,7 +17,10 @@ class ResourcePackHelper {
         val packsToRemove = mutableListOf<ResourcePackInfo>()
 
         for (index in 0..max(targetResourcePacks.size, appliedResourcePacks.size)) {
-            if (targetResourcePacks.getOrNull(index)?.id == appliedResourcePacks.getOrNull(index)?.id && !skipFurtherCheck) continue
+            // Skip applied pack on same position
+            val targetPack = targetResourcePacks.getOrNull(index)
+            val appliedPack = appliedResourcePacks.getOrNull(index)
+            if (targetPack?.id == appliedPack?.id && !skipFurtherCheck) continue
 
             skipFurtherCheck = true
             if (index < appliedResourcePacks.size) packsToRemove.add(appliedResourcePacks[index])

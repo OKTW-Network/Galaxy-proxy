@@ -57,7 +57,8 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
                 if (Files.isDirectory(file) || !Files.isReadable(file)) return@forEach
 
                 Files.newBufferedReader(file).use { json ->
-                    galaxies[file.fileName.toString().substringBeforeLast(".")] = gson.fromJson(json, GalaxySpec::class.java)
+                    val galaxyName = file.fileName.toString().substringBeforeLast(".")
+                    galaxies[galaxyName] = gson.fromJson(json, GalaxySpec::class.java)
                 }
             }
         }
