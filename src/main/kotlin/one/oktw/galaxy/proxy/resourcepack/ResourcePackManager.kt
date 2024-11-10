@@ -5,7 +5,7 @@ import com.velocitypowered.api.proxy.player.ResourcePackInfo
 import one.oktw.galaxy.proxy.Main.Companion.main
 import kotlin.math.max
 
-class ResourcePackHelper {
+class ResourcePackManager {
     private val appliedPacks: MutableMap<Player, List<ResourcePackInfo>> = mutableMapOf()
 
     fun updatePlayerResourcePacks(player: Player, galaxy: String) {
