@@ -2,6 +2,7 @@ package one.oktw.galaxy.proxy
 
 import com.google.inject.Inject
 import com.velocitypowered.api.event.Subscribe
+import com.velocitypowered.api.event.connection.DisconnectEvent
 import com.velocitypowered.api.event.player.KickedFromServerEvent
 import com.velocitypowered.api.event.player.ServerPostConnectEvent
 import com.velocitypowered.api.event.player.ServerPreConnectEvent
@@ -23,7 +24,7 @@ import one.oktw.galaxy.proxy.event.TabListUpdater
 import one.oktw.galaxy.proxy.kubernetes.KubernetesClient
 import one.oktw.galaxy.proxy.pubsub.Manager
 import one.oktw.galaxy.proxy.redis.RedisClient
-import one.oktw.galaxy.proxy.resourcepack.ResourcePackHelper
+import one.oktw.galaxy.proxy.resourcepack.ResourcePackManager
 import org.slf4j.Logger
 import java.net.InetSocketAddress
 import kotlin.system.exitProcess
@@ -53,6 +54,8 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
         private set
     lateinit var manager: Manager
         private set
+    lateinit var resourcePackManager: ResourcePackManager
+        private set
 
     @Inject
     fun init(proxy: ProxyServer, logger: Logger) {
@@ -63,6 +66,7 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
             this.config = ConfigManager()
             this.kubernetesClient = KubernetesClient()
             this.redisClient = RedisClient()
+            this.resourcePackManager = ResourcePackManager()
 
             manager = Manager(config.redisConfig.URI, config.redisConfig.PubSubPrefix)
             manager.subscribe(MESSAGE_TOPIC)
@@ -113,14 +117,20 @@ class Main : CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJo
                 it.result = ServerPreConnectEvent.ServerResult.allowed(lobby)
             }
 
+            // Remove player on disconnect
+            proxy.eventManager.register(this, DisconnectEvent::class.java) {
+                this.resourcePackManager.removePlayer(it.player)
+            }
+
+            // Update resourcepacks
             @Suppress("UnstableApiUsage") proxy.eventManager.register(this, ServerPostConnectEvent::class.java) {
+                // TODO: Get Galaxy Type
                 if (it.player.currentServer.get().serverInfo.name == "galaxy-lobby") {
-                    ResourcePackHelper.trySendResourcePack(it.player, "lobby")
+                    this.resourcePackManager.updatePlayerResourcePacks(it.player, "lobby")
                 } else {
-                    // TODO: Check Galaxy Type
                     if (it.previousServer?.serverInfo?.name != "galaxy-lobby") return@register
 
-                    ResourcePackHelper.trySendResourcePack(it.player, "normal_galaxy")
+                    this.resourcePackManager.updatePlayerResourcePacks(it.player, "normal_galaxy")
                 }
             }
 
