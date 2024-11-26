@@ -1,6 +1,7 @@
 package one.oktw.galaxy.proxy.config
 
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.runBlocking
 import one.oktw.galaxy.proxy.Main.Companion.main
 import one.oktw.galaxy.proxy.config.model.GalaxySpec
@@ -22,10 +23,11 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
     lateinit var redisConfig: RedisConfig
         private set
     val galaxies = HashMap<String, GalaxySpec>()
-    val galaxiesResourcePack = ConcurrentHashMap<String, ResourcePack>()
+    val resourcePacks = ConcurrentHashMap<String, ResourcePack>()
 
     init {
         readConfig()
+        readResourcePacks()
         readGalaxies(FileSystems.newFileSystem(this::class.java.getResource("/config")!!.toURI(), emptyMap<String, Any>()).getPath("/config/galaxies"))
         readGalaxies(basePath.resolve("galaxies"))
     }
@@ -41,6 +43,7 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
 
     fun reloadGalaxies() {
         readGalaxies(basePath.resolve("galaxies"))
+        readResourcePacks()
     }
 
     private fun readConfig() {
@@ -56,13 +59,22 @@ class ConfigManager(private val basePath: Path = Paths.get("config")) {
                 Files.newBufferedReader(file).use { json ->
                     val galaxyName = file.fileName.toString().substringBeforeLast(".")
                     galaxies[galaxyName] = gson.fromJson(json, GalaxySpec::class.java)
-                    runBlocking {
-                        try {
-                            galaxiesResourcePack[galaxyName] = galaxies[galaxyName]?.let { spec -> if (spec.ResourcePack.isNotBlank()) ResourcePack.new(spec.ResourcePack) else null } ?: return@runBlocking
-                        } catch (e: Exception) {
-                            main.logger.error("Resource pack load failed!", e)
-                        }
+                }
+            }
+        }
+    }
+
+    private fun readResourcePacks() {
+        val mapType = object : TypeToken<Map<String, String>>() {}
+        val packs = fallbackToResource("resource_packs.json").reader().use { gson.fromJson(it, mapType) }
+        packs.forEach { pack ->
+            runBlocking {
+                try {
+                    if (pack.value.isNotEmpty()) {
+                        resourcePacks[pack.key] = ResourcePack.new(pack.value)
                     }
+                } catch (e: Exception) {
+                    main.logger.error("Resource pack {} load failed!", pack.key, e)
                 }
             }
         }
