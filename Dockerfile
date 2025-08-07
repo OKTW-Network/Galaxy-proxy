@@ -8,7 +8,7 @@ WORKDIR /app
 COPY --chown=1000 --link docker /app
 
 # Download Velocity
-ADD --chown=1000 --checksum=sha256:9b0c812fe6a3335b49caf998e3be431d09f0f66473ac4f4baea0e844910e9021 --link https://api.papermc.io/v2/projects/velocity/versions/3.4.0-SNAPSHOT/builds/489/downloads/velocity-3.4.0-SNAPSHOT-489.jar /app/velocity.jar
+ADD --chown=1000 --checksum=sha256:61249fa5b9b33bc7e3223581eab6aedad790a295caf0e39da2ff3c8ec9d9117f --link https://fill-data.papermc.io/v1/objects/61249fa5b9b33bc7e3223581eab6aedad790a295caf0e39da2ff3c8ec9d9117f/velocity-3.4.0-SNAPSHOT-523.jar /app/velocity.jar
 
 # Run Server
 EXPOSE 25565
