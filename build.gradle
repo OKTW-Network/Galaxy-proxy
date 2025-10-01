@@ -6,19 +6,19 @@ plugins {
     id 'com.gradleup.shadow' version '9.2.2'
 }
 
-group 'one.oktw'
-version '1.0-SNAPSHOT'
+group = 'one.oktw'
+version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
     maven { url = "https://jitpack.io" }
     maven {
-        name 'papermc'
-        url 'https://repo.papermc.io/repository/maven-public/'
+        name = 'papermc'
+        url = 'https://repo.papermc.io/repository/maven-public/'
     }
     maven {
-        name 'adventure'
-        url 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+        name = 'adventure'
+        url = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
     }
 }
 
