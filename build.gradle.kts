@@ -29,7 +29,7 @@ dependencies {
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.5.0")
     implementation("io.lettuce:lettuce-core:6.8.1.RELEASE")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive")// lettuce need this
-    implementation("one.oktw:galaxy-lib:9dd6066")
+    implementation("one.oktw:galaxy-lib:f4e1b25")
 }
 
 tasks.withType<KotlinCompile>().configureEach {
