@@ -16,7 +16,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: caches-${{ hashFiles('build.gradle', 'gradle/wrapper/gradle-wrapper.properties') }}
+          key: caches-${{ hashFiles('build.gradle.kts', 'gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: |
             caches-
 
