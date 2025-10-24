@@ -27,7 +27,7 @@ dependencies {
     implementation("io.fabric8:kubernetes-client:7.4.0")
     implementation("io.fabric8:kubernetes-httpclient-okhttp:7.4.0")
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.5.0")
-    implementation("io.lettuce:lettuce-core:6.8.1.RELEASE")
+    implementation("io.lettuce:lettuce-core:7.0.0.RELEASE")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive")// lettuce need this
     implementation("one.oktw:galaxy-lib:f4e1b25")
 }
