@@ -15,7 +15,7 @@ class ResourcePackManager {
         // Matching new resource packs
         var updateIndex = old.lastIndex
         for (i in 0..min(old.size, new.size)) {
-            if (old.getOrNull(i)?.hash != new.getOrNull(i)?.hash) {
+            if (!old.getOrNull(i)?.hash.contentEquals(new.getOrNull(i)?.hash)) {
                 updateIndex = i
                 break
             }
