@@ -34,7 +34,7 @@ dependencies {
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_25
+        jvmTarget = JvmTarget.JVM_21
     }
 }
 
