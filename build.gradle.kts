@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "2.3.0"
     kotlin("kapt") version "2.3.0"
-    id("com.gradleup.shadow") version "9.3.0"
+    id("com.gradleup.shadow") version "9.3.1"
 }
 
 group = "one.oktw"
@@ -22,19 +22,19 @@ repositories {
 }
 
 dependencies {
-    kapt("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
-    compileOnly("com.velocitypowered:velocity-api:3.4.0-SNAPSHOT")
-    implementation("io.fabric8:kubernetes-client:7.4.0")
-    implementation("io.fabric8:kubernetes-httpclient-okhttp:7.4.0")
+    kapt("com.velocitypowered:velocity-api:3.5.0-SNAPSHOT")
+    compileOnly("com.velocitypowered:velocity-api:3.5.0-SNAPSHOT")
+    implementation("io.fabric8:kubernetes-client:7.5.2")
+    implementation("io.fabric8:kubernetes-httpclient-okhttp:7.5.2")
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.5.0")
-    implementation("io.lettuce:lettuce-core:6.8.2.RELEASE")
+    implementation("io.lettuce:lettuce-core:7.2.1.RELEASE")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive")// lettuce need this
     implementation("one.oktw:galaxy-lib:2235da5")
 }
 
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_21
+        jvmTarget = JvmTarget.JVM_25
     }
 }
 
