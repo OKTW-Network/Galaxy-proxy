@@ -1,5 +1,5 @@
 package one.oktw.galaxy.proxy.config.model
 
 data class ProxyConfig(
-    val ProtocolVersion: Int = 774 // default Minecraft 1.21.11
+    val ProtocolVersion: Int = 775 // default Minecraft 26.1-26.1.2
 )
