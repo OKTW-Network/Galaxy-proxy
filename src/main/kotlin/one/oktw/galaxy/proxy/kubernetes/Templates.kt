@@ -71,10 +71,15 @@ object Templates {
                     })
 
                     volumeMounts = listOf(
+                        // Mount the PVC root (contains world/) so the parent of the world
+                        // directory stays on the same filesystem. Minecraft 26+ FileFixerUpper
+                        // atomic-moves `world` <-> `world upgraded` as siblings during storage
+                        // migration; mounting only .../world (subPath) makes that a cross-device
+                        // move and aborts startup with AtomicMoveNotSupportedException.
+                        // Pair with docker image level-name=saves/world.
                         newVolumeMount {
                             this.name = "minecraft"
-                            subPath = "world"
-                            mountPath = "/app/minecraft/world"
+                            mountPath = "/app/minecraft/saves"
                         }
                     )
 
